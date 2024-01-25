@@ -1,0 +1,71 @@
+services:
+
+  #docker compose exec mysql bash
+  mysqlgtp:       
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    container_name: mysql-container-gpt
+    ports:
+      - 3310:3310
+    volumes:
+      #- ./mysql/dump/init:/docker-entrypoint-initdb.d #creare file 01.sql in folder /mysql/dump/init per generare db automaticamente 
+      - mysql-data-gpt:/var/lib/mysql:cache #Per persistere i dati non necessario in wp? crea problemi con più instanze vanno smontati i volumi
+      - ./mysql/dump/:/mysql-dump/:cache    
+    env_file:
+      - ./variables.env
+    restart: unless-stopped #Riavvia il contenitore sempre tranne che se bloccato manualmente e non lo riavvia se viene riavviato docker
+                            #https://docs.docker.com/config/containers/start-containers-automatically/#restart-policy-details
+
+  mongodbgpt:
+    image: mongo:latest
+    container_name: mongodb-container-gpt
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    # environment:
+      # MONGO_INITDB_ROOT_USERNAME: 27017
+      # MONGO_INITDB_ROOT_PASSWORD: examplepassword
+    
+
+  nodebackendgpt:
+    build: ./nodebackend/
+    container_name: node-container-backend-gpt   
+    ports:      
+      - 3001:3001
+      - 8081:8081
+    expose:
+      - 8081
+      - 3001
+    volumes:
+      - ./backend:/home/node/app/:cache #per sharare i file compilati da webpack a php e nginx
+      - ./nodebackend/ssl:/etc/ssl
+    volumes_from: #volume condiviso
+      - app-data-gpt
+    env_file:
+       - variables.env
+
+  app-data-gpt:
+    image: php:8.1-fpm-alpine #Path config php  /usr/local/etc
+    container_name: app-data-container-gpt
+    volumes: #per persistere i volumi tra container e host per non far cancellare i dati al down di docker
+      - ./backend/:/backend:cache #per sharare i file compilati da webpack a php e nginx
+    #command: "true"
+  
+  #docker compose exec redis  sh
+  redisgpt:
+    image: redis:alpine
+    container_name: redis-server-gpt
+    ports:
+      - 6380:6380
+    # links:
+    #   - php
+    volumes:
+      - ./redis/redis-data:/var/lib/redis:cache
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:cache
+    restart: unless-stopped
+
+
+volumes: #persiste questi volumi tra host e container anche al down dei container
+  mysql-data-gpt:
+  mongodb-data-gpt:

@@ -1,0 +1,27 @@
+{
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "importVanityfair": "npx ts-node src/siteScrapers/api/Vanityfair.ts -a readSitemap"
+  },
+  "dependencies": {
+    "@types/deep-diff": "^1.0.5",
+    "axios": "^1.6.5",
+    "cheerio": "^1.0.0-rc.12",
+    "csv-writer": "^1.6.0",
+    "deep-diff": "^1.0.2",
+    "dotenv": "^16.3.1",
+    "moment": "^2.29.4",
+    "mongoose": "^7.6.3",
+    "openai": "^4.25.0",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.2.2"
+  },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^20.9.4",
+    "ts-node": "^10.9.1"
+  }
+}

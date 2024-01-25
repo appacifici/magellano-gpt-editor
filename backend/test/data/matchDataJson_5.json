@@ -1,0 +1,58 @@
+{
+    "success": true,
+    "data": {
+        "match": [
+            {
+                "away_id": 46,
+                "federation": null,
+                "last_changed": "2023-12-09 16:24:32",
+                "home_name": "Eintracht Frankfurt",
+                "league_id": 0,
+                "score": "1 - 1",
+                "has_lineups": true,
+                "location": "Commerzbank-Arena",
+                "competition_id": 1,
+                "id": 481433,
+                "events": "https://livescore-api.com/api-client/scores/events.json?key=Ch8ND10XDfUlV77V&secret=fYiWw9pN8mi6dMyQ4GDHIEFlUAHPHOKX&id=481433",
+                "away_name": "Bayern Munich",
+                "home_id": 51,
+                "h2h": "https://livescore-api.com/api-client/teams/head2head.json?key=Ch8ND10XDfUlV77V&secret=fYiWw9pN8mi6dMyQ4GDHIEFlUAHPHOKX&team1_id=51&team2_id=46",
+                "et_score": "",
+                "country": {
+                    "id": 1,
+                    "flag": "GER.png",
+                    "name": "Germany"
+                },
+                "ft_score": "0 - 0",
+                "added": "2023-12-09 14:15:39",
+                "ps_score": "",
+                "status": "HALF TIME BREAK",
+                "competition_name": "Bundesliga",
+                "ht_score": "1 - 1",
+                "time": "45",
+                "scheduled": "14:30",
+                "fixture_id": 1619088,
+                "league_name": "",
+                "odds": {
+                    "pre": {
+                        "1": 8.5,
+                        "2": 1.3,
+                        "X": 6
+                    },
+                    "live": {
+                        "1": 1.01,
+                        "2": 1.01,
+                        "X": 901
+                    }
+                },
+                "outcomes": {
+                    "half_time": "1",
+                    "full_time": "1",
+                    "extra_time": null
+                }
+            }            
+        ]
+    }
+}
+
+

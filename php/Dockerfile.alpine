@@ -1,0 +1,49 @@
+FROM php:8.1-fpm-alpine
+
+RUN apk update && apk add \
+	libxml2-dev \
+	curl-dev \
+	icu-dev \
+	mysql-client \
+	zlib-dev \
+	libzip-dev \
+	zip \
+	unzip \
+	nano \
+	iputils \
+	wget \
+	npm \
+	vsftpd \
+	certbot \
+	certbot-nginx \
+	libpng-dev \
+	oniguruma-dev
+
+RUN docker-php-ext-install simplexml curl pdo pdo_mysql zip intl sockets dom gd mbstring mysqli 
+RUN docker-php-ext-enable mysqli
+RUN npm install --global gulp gulp-cli sass gulp-sass gulp-debug  
+ENV NODE_PATH=/usr/local/lib/node_modules
+
+#RUN pecl install ast && docker-php-ext-enable ast
+#RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+#RUN echo 'deb [trusted=yes] https://repo.symfony.com/apt/ /' | tee /etc/apt/sources.list.d/symfony-cli.list
+#RUN apt-get update && apt-get install -y symfony-cli
+
+RUN curl --insecure https://getcomposer.org/composer.phar -o /usr/bin/composer && chmod +x /usr/bin/composer
+
+#Creazione utente necessario per dare i necessari permessi a nginx di lettura
+RUN addgroup -g 1000 devuser
+RUN adduser -G devuser -u 1000 devuser -D
+RUN chown -R devuser:devuser /home/devuser
+
+USER devuser
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+COPY docker-php-ram-limit.ini /usr/local/etc/php/conf.d/docker-php-ram-limit.ini
+COPY www.conf /usr/local/etc/php-fpm.d/www.conf
+
+USER root
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod a+x /entrypoint.sh
+ENTRYPOINT [ "sh", "/entrypoint.sh" ]
+CMD [ "init" ]
