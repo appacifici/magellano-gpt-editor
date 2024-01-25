@@ -1,20 +1,15 @@
 
-import axios, { AxiosResponse }            from "axios";
-import OpenAI from "openai";
+import axios, { AxiosResponse }             from "axios";
+import dotenv                               from 'dotenv';
+import OpenAI                               from "openai";
+import MarkdownIt                           from 'markdown-it';
+import fs                                   from 'fs';
 
-import { ScrapedData }  from "../siteScrapers/interface/VanityfairInterface";
-import dotenv from 'dotenv';
-import Article, { ArticleType, ArticleWithIdType } from "../database/mongodb/models/Article";
-import Site, { SiteType, SiteWithIdType } from "../database/mongodb/models/Site";
-import connectMongoDB from "../database/mongodb/connect";
-
+import { ScrapedData }                      from "../siteScrapers/interface/VanityfairInterface";
+import Article, { ArticleWithIdType}        from "../database/mongodb/models/Article";
+import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
+import connectMongoDB                       from "../database/mongodb/connect";
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
-
-
-interface HeadersGpt {
-    ContentType: string,
-    Authorization: string
-}
 
 interface ChatCompletionRequest {
     model: string;
@@ -29,17 +24,17 @@ interface ChatCompletionResponse {
 
 class ChatGptApi {    
     
-    openai = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
+    openai  = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
+    md      = new MarkdownIt();
 
     constructor() {
         connectMongoDB();
     }
 
     public async  getArticleBySiteAndGenerate(siteName: string, generateValue: number) {
-        try {
-            
-            const site:SiteWithIdType|null        = await Site.findOne({ site: siteName  });
-            const article:ArticleWithIdType|null  = await Article.findOne({ site: site?._id, genarateGpt: generateValue });
+        try {            
+            const site:SiteWithIdType|null          = await Site.findOne({ site: siteName  });
+            const article:ArticleWithIdType|null    = await Article.findOne({ site: site?._id, genarateGpt: generateValue });
             if(article !== null){
                 const data:ScrapedData = {
                     bodyContainerHTML: article.body,
@@ -47,12 +42,29 @@ class ChatGptApi {
                     metaTitle: article.title,
                     metaDescription: article.description
                 }
-                const articleGpt:string|null = await this.processArticle(data);
+                const articleGpt:string|null        = await this.processArticle(data);
                 console.log(articleGpt);
+
+                const titleGpt:string|null          = await this.processTitle(data);
+                console.log(titleGpt);
+
+                const descriptionGpt:string|null    = await this.processDescription(data);
+                console.log(descriptionGpt);
+
+                const h1Gpt:string|null             = await this.processH1(data);
+                console.log(h1Gpt);
 
                 // Se articleGpt è valido, aggiorna il campo bodyGpt dell'articolo
                 if (articleGpt !== null) {
-                    await Article.updateOne({ _id: article._id }, { $set: { bodyGpt: articleGpt, genarateGpt: 1 } });
+                    await Article.updateOne({ _id: article._id }, 
+                        { $set: { 
+                            bodyGpt:        this.md.render(articleGpt), 
+                            titleGpt:       titleGpt, 
+                            descriptionGpt: descriptionGpt, 
+                            h1Gpt:          h1Gpt, 
+                            genarateGpt:    1 
+                        } 
+                    });
                     console.log('Campo bodyGpt dell\'articolo aggiornato con successo.');
                 } else {
                     console.log('Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
@@ -64,14 +76,32 @@ class ChatGptApi {
         }
     }
 
+    public async leggiFile(filePath: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+          fs.readFile(filePath, 'utf8', (err: NodeJS.ErrnoException | null, data: string) => {
+            if (err) {
+              reject(err);
+              return;
+            }
+            resolve(data);
+          });
+        });
+      }
+      
+
     public async processArticle(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            const text = s?.bodyContainerHTML;
+            // const text = s?.bodyContainerHTML;
+
+            const filePath: string = './src/commands/prova.txt';
+            const fileContent: string = await this.leggiFile(filePath);
+            const text = fileContent;
 
             if (text) {
                 console.log('Invio richiesta a chat gpt');
-                const completion = await this.openai.chat.completions.create({
+                console.log(text);
+                const completion = await this.openai.chat.completions.create({                   
                     messages: [
                         //Il messaggio di sistema aiuta a impostare il comportamento dell'assistente
                         {"role": "system", "content": "Riscrivi articolo e Adotta uno stile giornalistico professionale. Concentrati sull'uso di un linguaggio vario e ricco, evitando formule ripetitive o tipiche dell'IA. Struttura il testo come un vero pezzo giornalistico, con un'introduzione accattivante, sviluppo approfondito e una conclusione significativa. Utilizza interviste, citazioni e dati verificabili per arricchire il contenuto. Assicurati di variare le lunghezze delle frasi e di includere elementi stilistici umani, come metafore leggere, aneddoti rilevanti e osservazioni incisive, per rendere il testo dinamico e coinvolgente. Evita l'uso di jargon tecnico e scrivi in modo che sia comprensibile e interessante sia per un pubblico generico sia per lettori esperti sull'argomento, non terminare mai l'articolo con in conclusione, Usa il formato html, includi titoli di livello 2 (##) per ogni paragrafo."},
@@ -80,7 +110,7 @@ class ChatGptApi {
                         {"role": "user", "content": "Ricordati che sei un giornalista di gossip che riscrive notizie in 600 parole con stile naturale, assicurandoti di non copiare, ma di riformulare il contenuto con lo stesso significato. Usa il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo. Metti in grassetto nomi e cognomi e frasi che ritieni importanti, e usa il corsivo per le citazioni importanti. Assicurati che il testo segua le linee guida SEO, Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT"},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT, ricordati di usare il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo. Metti in grassetto nomi e cognomi e frasi che ritieni importanti in grassetto, e usa il corsivo per le citazioni"}
                     ],
-                    model: "gpt-3.5-turbo",
+                    model: "gpt-3.5-turbo-1106",
                     temperature: 0.6,
                     top_p: 0.9,
                   });
@@ -97,7 +127,10 @@ class ChatGptApi {
     public async processTitle(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            const text = s?.bodyContainerHTML;
+            // const text = s?.bodyContainerHTML;
+            const filePath: string = './src/commands/prova.txt';
+            const fileContent: string = await this.leggiFile(filePath);
+            const text = fileContent;
 
             if (text) {
                 const completion = await this.openai.chat.completions.create({
@@ -105,7 +138,63 @@ class ChatGptApi {
                         {"role": "user", "content": `Crea un dettagliato e incisivo in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare i 80 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel titolo, e ricorda di non superare gli 80 caratteri."},
                     ],
-                    model: "gpt-3.5-turbo",
+                    model: "gpt-3.5-turbo-1106",
+                    temperature: 0.6,
+                    top_p: 0.9,
+                  });
+                
+                  return completion.choices[0].message.content;
+            }
+            return null;
+        } catch (error) {
+            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
+            return '';
+        }        
+    }
+
+    public async processDescription(scrapedData:ScrapedData): Promise<string | null> {
+        try {      
+            const s:ScrapedData = scrapedData;
+            // const text = s?.bodyContainerHTML;
+            const filePath: string = './src/commands/prova.txt';
+            const fileContent: string = await this.leggiFile(filePath);
+            const text = fileContent;
+
+            if (text) {
+                const completion = await this.openai.chat.completions.create({
+                    messages: [                        
+                        {"role": "user", "content": `Crea una meta description in ottica seo incisiva in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare i 160 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
+                        {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nella descrizione, e ricorda di non superare gli 160 caratteri."},
+                    ],
+                    model: "gpt-3.5-turbo-1106",
+                    temperature: 0.6,
+                    top_p: 0.9,
+                  });
+                
+                  return completion.choices[0].message.content;
+            }
+            return null;
+        } catch (error) {
+            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
+            return '';
+        }        
+    }
+
+    public async processH1(scrapedData:ScrapedData): Promise<string | null> {
+        try {      
+            const s:ScrapedData = scrapedData;
+            // const text = s?.bodyContainerHTML;
+            const filePath: string = './src/commands/prova.txt';
+            const fileContent: string = await this.leggiFile(filePath);
+            const text = fileContent;
+
+            if (text) {
+                const completion = await this.openai.chat.completions.create({
+                    messages: [                        
+                        {"role": "user", "content": `Crea il testo per il tag h1 in ottica seo in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare 80 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
+                        {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel testo, e ricorda di non superare gli 80 caratteri."},
+                    ],
+                    model: "gpt-3.5-turbo-1106",
                     temperature: 0.6,
                     top_p: 0.9,
                   });

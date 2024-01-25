@@ -11,6 +11,7 @@
     "csv-writer": "^1.6.0",
     "deep-diff": "^1.0.2",
     "dotenv": "^16.3.1",
+    "markdown-it": "^14.0.0",
     "moment": "^2.29.4",
     "mongoose": "^7.6.3",
     "openai": "^4.25.0",
@@ -20,6 +21,7 @@
     "typescript": "^5.2.2"
   },
   "devDependencies": {
+    "@types/markdown-it": "^13.0.7",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.9.4",
     "ts-node": "^10.9.1"
