@@ -40,30 +40,6 @@ git clone git@github.com:appacifici/magellano-direttagol.git
 cd magellano-direttagol
 ```
 
-## Installazione frontend
-```bash 
-cd magellano-direttagol
-cd www/html/jsPlugins
-#Per disabilitare il traggiamento di next in maniera anonima 
-npx next telemetry disable
-npx next telemetry status
-#Risposta: Status: Disabled
-
-npm install
-npm run dev
-npm install forever -g
-cd /home/ubuntu/site/magellano-direttagol/www/html/jsPlugins
-forever start startFrontend.js
-
-sudo apt-get install ufw
-sudo ufw allow 22
-sudo ufw allow 80
-sudo ufw deny 3000
-sudo ufw enable
-sudo ufw status numbered
-
-```
-
 ## Installazione Backend
 ```bash 
 cd magellano-direttagol
@@ -149,66 +125,8 @@ mongorestore --db livescore /home/ubuntu/livescoreDump/livescore
 
 ```
 
-## Settaggi next
-```bash
-cd magellano-direttagol
-cd backend/
-#Per disabilitare il traggiamento di next in maniera anonima 
-npx next telemetry disable
-npx next telemetry status
-#Risposta: Status: Disabled
-
-npm install
-```
-
-## Reverse Proxy con Nginx o Apache
-```bash
-sudo apt install nginx
-sudo nano /etc/nginx/sites-available/diretta.conf
-```
-```bash
-server {
-    listen 80;
-
-    server_name example.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-sudo ln -s /etc/nginx/sites-available/diretta.conf /etc/nginx/sites-enabled/
-sudo systemctl restart nginx
-
-```
-
-
-## Build 
-```bash
-npx next lint
-npm run build ( build per la produzione )
-npm run start ( produzione )
-```
 
 ## Installazione cron
 ```bash
 0 1 * * * cd /home/ubuntu/site/magellano-direttagol/backend/ && NODE_ENV=production npx ts-node src/liveScoreApi/api/matches/ImportFixtureMatch.ts
 ```
-
-## SSL autofirmato
-```bash
-openssl genrsa -out mykey.pem 2048
-openssl req -new -key mykey.pem -out mycsr.pem
-openssl x509 -req -days 365 -in mycsr.pem -signkey mykey.pem -out mycert.pem
-
-
-```
-
-
