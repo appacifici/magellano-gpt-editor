@@ -2,6 +2,7 @@ import mongoose, { Document, Schema, Model, ObjectId } from 'mongoose';
 
 type ArticleType = {        
     site:               Schema.Types.ObjectId;
+    sitePublication:    Schema.Types.ObjectId;
     url:                string;
     body:               string;
     title:              string;
@@ -12,7 +13,9 @@ type ArticleType = {
     descriptionGpt?:    string;
     h1Gpt?:             string;
     send?:              number;   
-    genarateGpt?:       number;   
+    genarateGpt:        number;   
+    categoryPublishSite:Number;   
+    userPublishSite:    Number;   
 }
 
 interface IArticle extends Document, Omit<ArticleType, '_id'> {}
@@ -24,6 +27,11 @@ const ArticleSchema   = new Schema({
     site: { 
         type: Schema.Types.ObjectId, 
         ref: 'Site',
+        required: true
+    },
+    sitePublication: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'SitePublication',
         required: true
     },
     url: { 
@@ -74,6 +82,14 @@ const ArticleSchema   = new Schema({
         required:   false, 
         min:        0, 
         max:        1 
+    },
+    categoryPublishSite: { 
+        type:       Number, 
+        required:   false        
+    },    
+    userPublishSite: { 
+        type:       Number, 
+        required:   false        
     }    
 });
 

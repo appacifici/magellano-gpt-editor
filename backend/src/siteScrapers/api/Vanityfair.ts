@@ -9,6 +9,7 @@ import { ReadSitemapSingleNodeResponse,
          ReadSitemapResponse }                  from "../interface/SitemapInterface";
 import { ScrapedData }                          from "../interface/VanityfairInterface";
 import chatGptApi    from "../../services/ChatGptApi";
+import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 
 
 class Vanityfair extends BaseApi {
@@ -23,10 +24,13 @@ class Vanityfair extends BaseApi {
 
     private async read() {
         const results:SiteArrayWithIdType = await this.getSitemapBySite('vanityfair.it');        
-        results.forEach(async (result:SiteWithIdType) => {
+        results.forEach(async (result:SiteWithIdType) => {            
+            const sitePublication:SitePublicationWithIdType|null = await this.getSitePublication(result.sitePublication);    
+
             const url = result.url;          
-            const sitemap:ReadSitemapSingleNodeResponse = await this.readFirstNodeSitemapFromUrl(url);              
-            if( sitemap.success === true ) {    
+            const sitemap:ReadSitemapSingleNodeResponse = await this.readFirstNodeSitemapFromUrl(url);           
+            console.log(sitePublication);   
+            if( sitemap.success === true && sitePublication !== null ) {    
                  
                 let loc:string          = '';
                 let date: Date | null   = null;
@@ -53,7 +57,7 @@ class Vanityfair extends BaseApi {
                 
                 const sitemapDetail:ReadSitemapResponse = await this.readSitemapFromUrl(loc);                
                 if (sitemapDetail.data) {           
-                    this.insertOriginalArticle(result, sitemapDetail, this.scrapeWebsite);
+                    this.insertOriginalArticle(result, sitePublication, sitemapDetail, this.scrapeWebsite);
                     
                     for (const urlNode of sitemapDetail.data) {
                         const loc       = urlNode.loc;
@@ -72,7 +76,8 @@ class Vanityfair extends BaseApi {
                 //Per ogni news invocare il servizio di chatgpt generare il testo 
                 //Salvare il testo generato nel db
                 //Inviare il testo all'api di wp
-            }            
+            }     
+            console.log('no import Sitemap Article')       
         });        
     }
 

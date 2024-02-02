@@ -5,6 +5,7 @@ import cheerio                      from 'cheerio';
 import { ReadSitemapSingleNodeResponse, ReadSitemapResponse, UrlNode }      from "../interface/SitemapInterface";
 import { ScrapedData } from "../interface/VanityfairInterface";
 import Article, { ArticleType } from "../../database/mongodb/models/Article";
+import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 
 type ScrapeWebsiteFunction = (url: string) => Promise<ScrapedData | null>;
 
@@ -17,6 +18,11 @@ class BaseApi {
     public async getSitemapBySite(siteName:string):Promise<SiteArrayWithIdType> {        
         const results:SiteArrayWithIdType = await Site.find({ site: siteName });   
         return results;     
+    }
+
+    public async getSitePublication(sitePublicationName:string):Promise<SitePublicationWithIdType|null> {        
+        const result:SitePublicationWithIdType|null = await SitePublication.findOne({ sitePublication: sitePublicationName });   
+        return result;     
     }
 
     public async readFirstNodeSitemapFromUrl(url:string): Promise<ReadSitemapSingleNodeResponse> {
@@ -100,7 +106,7 @@ class BaseApi {
 
 
     
-    public async insertOriginalArticle(site:SiteWithIdType, sitemapDetail:ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {
+    public async insertOriginalArticle(site:SiteWithIdType, sitePublication:SitePublicationWithIdType, sitemapDetail:ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {
         if (sitemapDetail.data) {     
             for (const urlNode of sitemapDetail.data) {
                 const loc       = urlNode.loc;
@@ -114,14 +120,17 @@ class BaseApi {
                     && scrapedData.h1Content !== undefined
                 ) {
                     const articleData:ArticleType = {
-                        site:           site._id,
-                        url:            urlNode.loc,
-                        body:           scrapedData?.bodyContainerHTML,
-                        title:          scrapedData?.metaTitle,
-                        description:    scrapedData?.metaDescription,                        
-                        h1:             scrapedData?.h1Content,                 
-                        genarateGpt:    0,
-                        send:           0,
+                        site:                   site._id,
+                        sitePublication:        sitePublication._id,
+                        url:                    urlNode.loc,
+                        body:                   scrapedData?.bodyContainerHTML,
+                        title:                  scrapedData?.metaTitle,
+                        description:            scrapedData?.metaDescription,                        
+                        h1:                     scrapedData?.h1Content,                 
+                        genarateGpt:            0,
+                        send:                   0,
+                        categoryPublishSite:    site.categoryPublishSite,
+                        userPublishSite:        site.userPublishSite,
                     };
                     
                     this.insertArticle(articleData);

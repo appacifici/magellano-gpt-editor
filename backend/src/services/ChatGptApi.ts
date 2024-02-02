@@ -18,10 +18,6 @@ interface ChatCompletionRequest {
     prompt: { role: string; content: string }[];
 }
 
-interface ChatCompletionResponse {
-    choices: { text: string }[];
-}
-
 class ChatGptApi {    
     
     openai  = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
@@ -92,19 +88,15 @@ class ChatGptApi {
     public async processArticle(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            // const text = s?.bodyContainerHTML;
-
-            const filePath: string = './src/commands/prova.txt';
-            const fileContent: string = await this.leggiFile(filePath);
-            const text = fileContent;
+            const text = s?.bodyContainerHTML;
 
             if (text) {
                 console.log('Invio richiesta a chat gpt');
-                console.log(text);
+                
                 const completion = await this.openai.chat.completions.create({                   
                     messages: [
                         //Il messaggio di sistema aiuta a impostare il comportamento dell'assistente
-                        {"role": "system", "content": "Riscrivi articolo e Adotta uno stile giornalistico professionale. Concentrati sull'uso di un linguaggio vario e ricco, evitando formule ripetitive o tipiche dell'IA. Struttura il testo come un vero pezzo giornalistico, con un'introduzione accattivante, sviluppo approfondito e una conclusione significativa. Utilizza interviste, citazioni e dati verificabili per arricchire il contenuto. Assicurati di variare le lunghezze delle frasi e di includere elementi stilistici umani, come metafore leggere, aneddoti rilevanti e osservazioni incisive, per rendere il testo dinamico e coinvolgente. Evita l'uso di jargon tecnico e scrivi in modo che sia comprensibile e interessante sia per un pubblico generico sia per lettori esperti sull'argomento, non terminare mai l'articolo con in conclusione, Usa il formato html, includi titoli di livello 2 (##) per ogni paragrafo."},
+                        {"role": "system", "content": "Riscrivi articolo e Adotta uno stile giornalistico professionale. Concentrati sull'uso di un linguaggio vario e ricco, evitando formule ripetitive o tipiche dell'IA. Struttura il testo come un vero pezzo giornalistico, diviso in capitoli con il formato Markdow (##), con un'introduzione accattivante, sviluppo approfondito e una conclusione significativa. Utilizza interviste, citazioni e dati verificabili per arricchire il contenuto. Assicurati di variare le lunghezze delle frasi e di includere elementi stilistici umani, come metafore leggere, aneddoti rilevanti e osservazioni incisive, per rendere il testo dinamico e coinvolgente. Evita l'uso di jargon tecnico e scrivi in modo che sia comprensibile e interessante sia per un pubblico generico sia per lettori esperti sull'argomento, non terminare mai l'articolo con in conclusione, Usa il formato html, includi titoli di livello 2 (##) per ogni paragrafo."},
                         // I messaggi dell'utente forniscono richieste o commenti a cui l'assistente può rispondere
                         {"role": "user", "content": text},
                         {"role": "user", "content": "Ricordati che sei un giornalista di gossip che riscrive notizie in 600 parole con stile naturale, assicurandoti di non copiare, ma di riformulare il contenuto con lo stesso significato. Usa il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo. Metti in grassetto nomi e cognomi e frasi che ritieni importanti, e usa il corsivo per le citazioni importanti. Assicurati che il testo segua le linee guida SEO, Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT"},
@@ -127,10 +119,7 @@ class ChatGptApi {
     public async processTitle(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            // const text = s?.bodyContainerHTML;
-            const filePath: string = './src/commands/prova.txt';
-            const fileContent: string = await this.leggiFile(filePath);
-            const text = fileContent;
+            const text = s?.bodyContainerHTML;            
 
             if (text) {
                 const completion = await this.openai.chat.completions.create({
@@ -155,10 +144,7 @@ class ChatGptApi {
     public async processDescription(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            // const text = s?.bodyContainerHTML;
-            const filePath: string = './src/commands/prova.txt';
-            const fileContent: string = await this.leggiFile(filePath);
-            const text = fileContent;
+            const text = s?.bodyContainerHTML;            
 
             if (text) {
                 const completion = await this.openai.chat.completions.create({
@@ -183,10 +169,7 @@ class ChatGptApi {
     public async processH1(scrapedData:ScrapedData): Promise<string | null> {
         try {      
             const s:ScrapedData = scrapedData;
-            // const text = s?.bodyContainerHTML;
-            const filePath: string = './src/commands/prova.txt';
-            const fileContent: string = await this.leggiFile(filePath);
-            const text = fileContent;
+            const text = s?.bodyContainerHTML;            
 
             if (text) {
                 const completion = await this.openai.chat.completions.create({

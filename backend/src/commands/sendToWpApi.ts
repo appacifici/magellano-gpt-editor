@@ -15,4 +15,4 @@ program.version('1.0.0').description('CLI team commander')
     });
 program.parse(process.argv);
 
-//NODE_ENV=development npx ts-node src/commands/generateGptArticle.ts -s vanityfair.it
+//NODE_ENV=development npx ts-node src/commands/sendToWpApi.ts -s vanityfair.it

@@ -1,12 +1,15 @@
 import mongoose, { Document, Schema, Model, ObjectId } from 'mongoose';
 
 type SiteType = {        
-    site:       string;
-    url:        string;
-    lastUrl?:   string;
-    format:     string;
-    lastmod?:   Date;   
-    active:     number;   
+    site:               string;
+    sitePublication:    string;
+    url:                string;
+    lastUrl?:           string;
+    format:             string;
+    lastmod?:           Date;   
+    active:             number;   
+    categoryPublishSite:Number;   
+    userPublishSite:    Number;  
 }
 
 interface ISite extends Document, Omit<SiteType, '_id'> {}
@@ -19,6 +22,10 @@ const SiteSchema   = new Schema({
         type:       String, 
         required:   true 
     },    
+    sitePublication: { 
+        type: String, 
+        required: true
+    },
     url: { 
         type:       String, 
         required:   true, 
@@ -41,7 +48,15 @@ const SiteSchema   = new Schema({
     format: { 
         type:       String, 
         required:   true,        
-    },
+    },    
+    categoryPublishSite: { 
+        type:       Number, 
+        required:   false        
+    },    
+    userPublishSite: { 
+        type:       Number, 
+        required:   false        
+    } 
 });
 
 SiteSchema.index({ site: 1, url:1 }, { unique: true });
