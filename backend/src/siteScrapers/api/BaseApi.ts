@@ -4,10 +4,11 @@ import axios, {AxiosError, AxiosResponse}          from "axios";
 import cheerio                      from 'cheerio';
 import { ReadSitemapSingleNodeResponse, ReadSitemapResponse, UrlNode }      from "../interface/SitemapInterface";
 import { ScrapedData } from "../interface/VanityfairInterface";
-import Article, { ArticleType } from "../../database/mongodb/models/Article";
+import Article, { ArticleType, ArticleWithIdType } from "../../database/mongodb/models/Article";
 import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 
 type ScrapeWebsiteFunction = (url: string) => Promise<ScrapedData | null>;
+
 
 class BaseApi {
 
@@ -23,6 +24,52 @@ class BaseApi {
     public async getSitePublication(sitePublicationName:string):Promise<SitePublicationWithIdType|null> {        
         const result:SitePublicationWithIdType|null = await SitePublication.findOne({ sitePublication: sitePublicationName });   
         return result;     
+    }
+
+    public async getArticleByUrl(url:string):Promise<ArticleWithIdType|null> {        
+        const result:ArticleWithIdType|null = await Article.findOne({ url: url });   
+        return result;     
+    }
+
+    protected async read(siteName:string, scrapeWebsite:ScrapeWebsiteFunction) {        
+        const results:SiteArrayWithIdType = await this.getSitemapBySite(siteName);        
+        results.forEach(async (result:SiteWithIdType) => {                        
+            const sitePublication:SitePublicationWithIdType|null = await this.getSitePublication(result.sitePublication);    
+            
+            const url = result.url;          
+            const sitemap:ReadSitemapSingleNodeResponse = await this.readFirstNodeSitemapFromUrl(url);                    
+            
+            if( sitemap.success === true && sitePublication !== null ) {         
+                let loc:string          = '';
+                let date: Date | null   = null;
+                date = new Date();
+
+                if (sitemap.data != undefined) {
+                    date = new Date(sitemap.data.lastmod);
+                    loc  = sitemap.data.loc;
+                }
+
+                const updateData = {
+                    lastMod: new Date(date),
+                    lastUrl: loc,
+                    active: 1,
+                };
+
+                Site.updateOne({ url: url }, { $set: updateData })
+                .then((result) => {
+                    console.log('Site aggiornato con successo:', url);
+                })
+                .catch((error) => {
+                    console.error('Errore nell\'aggiornamento Site:', url)
+                });                
+                
+                const sitemapDetail:ReadSitemapResponse = await this.readSitemapFromUrl(loc);                
+                if (sitemapDetail.data) {           
+                    this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);                                       
+                }                
+            }                 
+            // console.log('no import Sitemap Article')                   
+        });            
     }
 
     public async readFirstNodeSitemapFromUrl(url:string): Promise<ReadSitemapSingleNodeResponse> {
@@ -109,31 +156,34 @@ class BaseApi {
     public async insertOriginalArticle(site:SiteWithIdType, sitePublication:SitePublicationWithIdType, sitemapDetail:ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {
         if (sitemapDetail.data) {     
             for (const urlNode of sitemapDetail.data) {
-                const loc       = urlNode.loc;
-                const lastmod   = urlNode.lastmod;
-                const scrapedData:ScrapedData|null = await scrapeWebsite(loc); 
-                                
-                if( scrapedData 
-                    && scrapedData.bodyContainerHTML !== undefined 
-                    && scrapedData.metaTitle !== undefined 
-                    && scrapedData.metaDescription !== undefined
-                    && scrapedData.h1Content !== undefined
-                ) {
-                    const articleData:ArticleType = {
-                        site:                   site._id,
-                        sitePublication:        sitePublication._id,
-                        url:                    urlNode.loc,
-                        body:                   scrapedData?.bodyContainerHTML,
-                        title:                  scrapedData?.metaTitle,
-                        description:            scrapedData?.metaDescription,                        
-                        h1:                     scrapedData?.h1Content,                 
-                        genarateGpt:            0,
-                        send:                   0,
-                        categoryPublishSite:    site.categoryPublishSite,
-                        userPublishSite:        site.userPublishSite,
-                    };
-                    
-                    this.insertArticle(articleData);
+                const existArticle = await this.getArticleByUrl(urlNode.loc);
+                    if( existArticle === null ) {
+                    const loc       = urlNode.loc;
+                    const lastmod   = urlNode.lastmod;
+                    const scrapedData:ScrapedData|null = await scrapeWebsite(loc); 
+                                    
+                    if( scrapedData 
+                        && scrapedData.bodyContainerHTML !== undefined 
+                        && scrapedData.metaTitle !== undefined 
+                        && scrapedData.metaDescription !== undefined
+                        && scrapedData.h1Content !== undefined
+                    ) {
+                        const articleData:ArticleType = {
+                            site:                   site._id,
+                            sitePublication:        sitePublication._id,
+                            url:                    urlNode.loc,
+                            body:                   scrapedData?.bodyContainerHTML,
+                            title:                  scrapedData?.metaTitle,
+                            description:            scrapedData?.metaDescription,                        
+                            h1:                     scrapedData?.h1Content,                 
+                            genarateGpt:            0,
+                            send:                   0,
+                            categoryPublishSite:    site.categoryPublishSite,
+                            userPublishSite:        site.userPublishSite,
+                        };
+                        
+                        this.insertArticle(articleData);
+                    }
                 }
             }
         }

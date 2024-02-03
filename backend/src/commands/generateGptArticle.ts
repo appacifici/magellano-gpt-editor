@@ -1,6 +1,5 @@
 import { Command }      from 'commander';
-import Vanityfair       from '../siteScrapers/api/Vanityfair';
-import ChatGptApi from '../services/ChatGptApi';
+import ChatGptApi       from '../services/ChatGptApi';
 
 const program = new Command();
 program.version('1.0.0').description('CLI team commander') 

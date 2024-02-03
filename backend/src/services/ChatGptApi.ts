@@ -39,16 +39,16 @@ class ChatGptApi {
                     metaDescription: article.description
                 }
                 const articleGpt:string|null|null        = await this.processArticle(data);
-                console.log(articleGpt);
+                //console.log(articleGpt);
 
                 const titleGpt:string|null          = await this.processTitle(articleGpt);
-                console.log(titleGpt);
+                console.log(siteName+': '+titleGpt);
 
                 const descriptionGpt:string|null    = await this.processDescription(articleGpt);
-                console.log(descriptionGpt);
+                //console.log(descriptionGpt);
 
                 const h1Gpt:string|null             = await this.processH1(articleGpt);
-                console.log(h1Gpt);
+                //console.log(h1Gpt);
 
                 // Se articleGpt è valido, aggiorna il campo bodyGpt dell'articolo
                 if (articleGpt !== null) {
@@ -61,17 +61,14 @@ class ChatGptApi {
                             genarateGpt:    1 
                         } 
                     });
-                    console.log('Campo bodyGpt dell\'articolo aggiornato con successo.');
-                    process.exit();
+                    console.log(siteName+ ': Campo bodyGpt dell\'articolo aggiornato con successo.');
                 } else {
-                    console.log('Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
-                    process.exit();
+                    console.log(siteName+ ': Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
                 }
             }
             
         } catch (error) {
-            console.error('Errore durante il recupero degli articoli:', error);
-            process.exit();
+            console.error(siteName+ ': Errore durante il recupero degli articoli:', error);
         }
     }
 
@@ -113,9 +110,9 @@ class ChatGptApi {
                   return completion.choices[0].message.content;
             }
             return null;
-        } catch (error) {
-            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
-            return '';
+        } catch (error:any) {
+            console.error('Errore durante l\'elaborazione dell\'articolo:', error.error);
+            return null;
         }
     }
 

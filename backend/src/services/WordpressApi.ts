@@ -67,29 +67,25 @@ class WordpressApi {
                         }
                     })
                     .then(response => {
-                        console.log('Post inserito con successo:', response.data);
+                        console.log(siteName+': Post inserito con successo:');
                         const filtro = { _id: article._id };
                         const aggiornamento = { send: 1 }; // Specifica i campi da aggiornare e i loro nuovi valori
 
                         Article.findOneAndUpdate(filtro, aggiornamento, { new: true })
                         .then((documentoAggiornato) => {
-                            console.log('Set send 1 avvenuta con successo:', response.data);
-                            process.exit();
+                            console.log(siteName+': Set send 1 avvenuta con successo');
                         })
                         .catch((errore) => {
-                            console.log('Errore send:', response.data);
-                            process.exit();
+                            console.log(siteName+': Errore send:', response.data);
                         });
                     })
                     .catch(error => {
-                        console.error('Errore durante l\'inserimento del post:', error.response.data);
-                        process.exit();
+                        console.error(siteName+': Errore durante l\'inserimento del post:', error.response.data);
                     });
                 }
             })
             .catch(error => {
-                console.error('Errore durante la generazione del token:', error);
-                process.exit();
+                console.error(siteName+': Errore durante la generazione del token:', error);
             });
         return true;
     }

@@ -1,5 +1,4 @@
 import { Command }      from 'commander';
-import Vanityfair       from '../siteScrapers/api/Vanityfair';
 import WordpressApi      from '../services/WordpressApi';
 
 const program = new Command();
