@@ -124,8 +124,7 @@ mongorestore --db livescore /home/ubuntu/livescoreDump/livescore
 
 ```
 
-
 ## Installazione cron
-```bash
-0 1 * * * cd /home/ubuntu/site/magellano-direttagol/backend/ && NODE_ENV=production npx ts-node src/liveScoreApi/api/matches/ImportFixtureMatch.ts
-```
+NODE_ENV=production forever start  src/forever/foreverImportSitemapArticle.cjs
+NODE_ENV=production forever start  src/forever/foreverGenerateGptArticle.cjs
+NODE_ENV=production forever start  src/forever/foreverSendToWpApi.cjs
