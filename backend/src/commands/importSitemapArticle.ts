@@ -8,7 +8,7 @@ program.version('1.0.0').description('CLI team commander')
     .action((options) => {            
         switch( options.site ) {            
             case 'vanityfair.it':                       
-                new Vanityfair(options.action);
+                new Vanityfair(options.action);                
             break;
         }
     });

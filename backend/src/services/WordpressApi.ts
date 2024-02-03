@@ -51,8 +51,12 @@ class WordpressApi {
                     };
                     const wordpressAPIURL   = sitePublication.url;        
                     const postData          = {
-                        title: article.titleGpt,
+                        title: article.h1Gpt,
                         content: article.bodyGpt,
+                        yoast_title: article.titleGpt,
+                        yoast_meta: {
+                            description: article.descriptionGpt
+                        },
                         status: 'publish',                                                                        
                     };
 
@@ -70,18 +74,22 @@ class WordpressApi {
                         Article.findOneAndUpdate(filtro, aggiornamento, { new: true })
                         .then((documentoAggiornato) => {
                             console.log('Set send 1 avvenuta con successo:', response.data);
+                            process.exit();
                         })
                         .catch((errore) => {
                             console.log('Errore send:', response.data);
+                            process.exit();
                         });
                     })
                     .catch(error => {
                         console.error('Errore durante l\'inserimento del post:', error.response.data);
+                        process.exit();
                     });
                 }
             })
             .catch(error => {
                 console.error('Errore durante la generazione del token:', error);
+                process.exit();
             });
         return true;
     }

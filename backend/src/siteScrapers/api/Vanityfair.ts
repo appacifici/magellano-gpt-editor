@@ -76,9 +76,10 @@ class Vanityfair extends BaseApi {
                 //Per ogni news invocare il servizio di chatgpt generare il testo 
                 //Salvare il testo generato nel db
                 //Inviare il testo all'api di wp
-            }     
-            console.log('no import Sitemap Article')       
+            }                 
+            console.log('no import Sitemap Article')                   
         });        
+        process.exit();
     }
 
     private async scrapeWebsite(url: string): Promise<ScrapedData | null> {

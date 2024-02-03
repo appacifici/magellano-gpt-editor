@@ -36,13 +36,13 @@ Cliccare su **Add deploy key** e incollare la chiave appena generata, poi salvar
 ```bash 
 mkdir /home/ubuntu/site
 cd /home/ubuntu/site
-git clone git@github.com:appacifici/magellano-direttagol.git
+git clone git@github.com:appacifici/magellano-gpt-editor.git
 cd magellano-direttagol
 ```
 
 ## Installazione Backend
 ```bash 
-cd magellano-direttagol
+cd magellano-gpt-editor
 cd backend/
 #Per disabilitare il traggiamento di next in maniera anonima 
 npx next telemetry disable
@@ -51,7 +51,7 @@ npx next telemetry status
 
 npm install
 npm install forever -g
-cd /home/ubuntu/site/magellano-direttagol/backend
+cd /home/ubuntu/site/magellano-gpt-editor/backend
 forever start socketLiveMacth.js
 
 sudo apt-get install ufw
@@ -85,7 +85,7 @@ mongod --version
 sudo nano /usr/lib/systemd/system/mongod.service
 Environment="MONGODB_CONFIG_OVERRIDE_NOFORK=0"
 sudo systemctl daemon-reload
-sudo systemctl resart mongod
+sudo systemctl restart mongod
 
 #Avvia e Abilita MongoDB: Una volta installato, devi avviare il servizio MongoDB e abilitarlo a partire automaticamente all'avvio del sistema
 sudo systemctl start mongod
@@ -94,8 +94,7 @@ sudo systemctl enable mongod
 #Firewall
 
 sudo ufw status numbered
-sudo ufw allow from 149.202.70.56 to any port 27017
-sudo ufw allow from 193.70.46.74 to any port 27017
+sudo ufw allow from 79.56.220.84 to any port 27017
 sudo ufw allow 22
 sudo ufw enable
 sudo ufw status numbered

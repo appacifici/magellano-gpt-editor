@@ -38,16 +38,16 @@ class ChatGptApi {
                     metaTitle: article.title,
                     metaDescription: article.description
                 }
-                const articleGpt:string|null        = await this.processArticle(data);
+                const articleGpt:string|null|null        = await this.processArticle(data);
                 console.log(articleGpt);
 
-                const titleGpt:string|null          = await this.processTitle(data);
+                const titleGpt:string|null          = await this.processTitle(articleGpt);
                 console.log(titleGpt);
 
-                const descriptionGpt:string|null    = await this.processDescription(data);
+                const descriptionGpt:string|null    = await this.processDescription(articleGpt);
                 console.log(descriptionGpt);
 
-                const h1Gpt:string|null             = await this.processH1(data);
+                const h1Gpt:string|null             = await this.processH1(articleGpt);
                 console.log(h1Gpt);
 
                 // Se articleGpt è valido, aggiorna il campo bodyGpt dell'articolo
@@ -62,13 +62,16 @@ class ChatGptApi {
                         } 
                     });
                     console.log('Campo bodyGpt dell\'articolo aggiornato con successo.');
+                    process.exit();
                 } else {
                     console.log('Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
+                    process.exit();
                 }
             }
             
         } catch (error) {
             console.error('Errore durante il recupero degli articoli:', error);
+            process.exit();
         }
     }
 
@@ -116,15 +119,16 @@ class ChatGptApi {
         }
     }
 
-    public async processTitle(scrapedData:ScrapedData): Promise<string | null> {
+    public async processTitle(articleGpt:string|null): Promise<string | null> {
         try {      
-            const s:ScrapedData = scrapedData;
-            const text = s?.bodyContainerHTML;            
-
-            if (text) {
+                      
+            if (articleGpt) {
                 const completion = await this.openai.chat.completions.create({
-                    messages: [                        
-                        {"role": "user", "content": `Crea un dettagliato e incisivo in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare i 80 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
+                    messages: [      
+                        {"role": "user", "content": articleGpt},                  
+                        {"role": "user", "content": `Crea il meta title seo per il testo che ti ho fornito`},
+                        {"role": "user", "content": `utilizza massimo 80 caratteri`},
+                        {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel titolo, e ricorda di non superare gli 80 caratteri."},
                     ],
                     model: "gpt-3.5-turbo-1106",
@@ -136,20 +140,20 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
+            console.error('Errore durante l\'elaborazione title:', error);
             return '';
         }        
     }
-
-    public async processDescription(scrapedData:ScrapedData): Promise<string | null> {
-        try {      
-            const s:ScrapedData = scrapedData;
-            const text = s?.bodyContainerHTML;            
-
-            if (text) {
+    
+    public async processDescription(articleGpt:string|null): Promise<string | null> {
+        try {                  
+            if (articleGpt) {
                 const completion = await this.openai.chat.completions.create({
-                    messages: [                        
-                        {"role": "user", "content": `Crea una meta description in ottica seo incisiva in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare i 160 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
+                    messages: [          
+                        {"role": "user", "content": articleGpt},                        
+                        {"role": "user", "content": `Crea una meta description SEO incisiva in italiano per il testo che ti ho fornito.`},
+                        {"role": "user", "content": `utilizza massimo 160 caratteri`},
+                        {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nella descrizione, e ricorda di non superare gli 160 caratteri."},
                     ],
                     model: "gpt-3.5-turbo-1106",
@@ -161,20 +165,21 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
+            console.error('Errore durante l\'elaborazione description:', error);
             return '';
         }        
     }
 
-    public async processH1(scrapedData:ScrapedData): Promise<string | null> {
-        try {      
-            const s:ScrapedData = scrapedData;
-            const text = s?.bodyContainerHTML;            
-
-            if (text) {
+    public async processH1(articleGpt:string|null): Promise<string | null> {
+        try {                            
+            
+            if (articleGpt) {
                 const completion = await this.openai.chat.completions.create({
-                    messages: [                        
-                        {"role": "user", "content": `Crea il testo per il tag h1 in ottica seo in italiano che contiene informazioni dettagliate su persone o fatti, riflettendo accuratamente il contenuto dell'articolo, non superare 80 caratteri, mi raccomando non inserire mai le virgolette all'interno del titolo o apici doppi. : ${text}`},
+                    messages: [                      
+                        {"role": "user", "content": articleGpt},       
+                        {"role": "user", "content": `Crea il testo per il tag h1 in ottica seo in italiano per il testo che ti ho fornito`},
+                        {"role": "user", "content": `utilizza massimo 80 caratteri`},
+                        {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel testo, e ricorda di non superare gli 80 caratteri."},
                     ],
                     model: "gpt-3.5-turbo-1106",
@@ -186,7 +191,7 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione dell\'articolo:', error);
+            console.error('Errore durante l\'elaborazione h1:', error);
             return '';
         }        
     }
