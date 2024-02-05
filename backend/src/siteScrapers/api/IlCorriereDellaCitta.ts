@@ -12,12 +12,12 @@ import chatGptApi    from "../../services/ChatGptApi";
 import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 
 
-class Vanityfair extends BaseApi {
+class IlCorriereDellaCitta extends BaseApi {
     constructor(action:string) {
         super();        
         switch( action ) {
             case 'readSitemap':
-                this.readFromListSitemap('vanityfair.it', this.scrapeWebsite);
+                this.readSimpleSitemap('ilcorrieredellacitta.com', this.scrapeWebsite);
             break;            
         }
     }
@@ -27,7 +27,7 @@ class Vanityfair extends BaseApi {
             // Effettua la richiesta HTTP per ottenere il contenuto della pagina
             const response          = await axios.get(url);
             const cheerioLoad       = cheerio.load(response.data);    
-            const bodyContainerHTML = cheerioLoad('.body__container').html() || '';    
+            const bodyContainerHTML = cheerioLoad('.dynamic-entry-content').html() || '';    
             const h1Content         = cheerioLoad('h1').text() || '';    
             const metaTitle         = cheerioLoad('title').text();
             const metaDescription   = cheerioLoad('meta[name="description"]').attr('content');
@@ -46,4 +46,4 @@ class Vanityfair extends BaseApi {
     }
 }
 
-export default Vanityfair;
+export default IlCorriereDellaCitta;

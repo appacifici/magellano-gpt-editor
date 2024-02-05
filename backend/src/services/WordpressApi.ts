@@ -15,8 +15,7 @@ class WordpressApi {
         connectMongoDB();
     }
 
-    public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {
-        console.log(siteName);
+    public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {        
         const site: SiteWithIdType | null                       = await Site.findOne({ site: siteName });
         const article: ArticleWithIdType | null                 = await Article.findOne({ site: site?._id, send: send, genarateGpt: 1 });
         const sitePublication:SitePublicationWithIdType|null    = await SitePublication.findOne({ _id: article?.sitePublication.toString() });   
@@ -33,6 +32,7 @@ class WordpressApi {
         // URL per il punto finale di autenticazione JWT
         const authUrl = sitePublication.tokenUrl;
 
+        console.log(userData);
         // Effettua una richiesta POST per generare il token di autenticazione
         fetch(authUrl, {
             method: 'POST',
@@ -41,9 +41,8 @@ class WordpressApi {
             },
             body: JSON.stringify(userData)
         })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
+        .then(response => response.json())
+            .then(data => {                
                 const token = data.token;                
                 if( article !== null ) {
                     const auth = {
@@ -53,6 +52,8 @@ class WordpressApi {
                     const postData          = {
                         title: article.h1Gpt,
                         content: article.bodyGpt,
+                        _yoast_wpseo_title: article.titleGpt,
+                        _yoast_wpseo_metadesc: article.descriptionGpt,
                         yoast_title: article.titleGpt,
                         yoast_meta: {
                             description: article.descriptionGpt

@@ -1,5 +1,6 @@
 import { Command }      from 'commander';
 import Vanityfair       from '../siteScrapers/api/Vanityfair';
+import IlCorriereDellaCitta from '../siteScrapers/api/IlCorriereDellaCitta';
 
 const program = new Command();
 program.version('1.0.0').description('CLI team commander') 
@@ -9,6 +10,9 @@ program.version('1.0.0').description('CLI team commander')
         switch( options.site ) {            
             case 'vanityfair.it':                       
                 new Vanityfair(options.action);                
+            break;
+            case 'ilcorrieredellacitta.com':                       
+                new IlCorriereDellaCitta(options.action);                
             break;
         }
     });

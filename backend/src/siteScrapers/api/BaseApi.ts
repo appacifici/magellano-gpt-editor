@@ -31,7 +31,8 @@ class BaseApi {
         return result;     
     }
 
-    protected async read(siteName:string, scrapeWebsite:ScrapeWebsiteFunction) {        
+    //Legge una sitemap che contiene la lista di tutte le sotto sitemap 
+    protected async readFromListSitemap(siteName:string, scrapeWebsite:ScrapeWebsiteFunction) {        
         const results:SiteArrayWithIdType = await this.getSitemapBySite(siteName);        
         results.forEach(async (result:SiteWithIdType) => {                        
             const sitePublication:SitePublicationWithIdType|null = await this.getSitePublication(result.sitePublication);    
@@ -72,7 +73,27 @@ class BaseApi {
         });            
     }
 
-    public async readFirstNodeSitemapFromUrl(url:string): Promise<ReadSitemapSingleNodeResponse> {
+    /**
+     * Legge una classica sitemap di url
+     */
+    protected async readSimpleSitemap(siteName:string, scrapeWebsite:ScrapeWebsiteFunction) {        
+        const results:SiteArrayWithIdType = await this.getSitemapBySite(siteName);        
+        results.forEach(async (result:SiteWithIdType) => {   
+                           
+            const sitePublication:SitePublicationWithIdType|null = await this.getSitePublication(result.sitePublication);                
+            const url = result.url;                                                    
+            
+            const sitemapDetail:ReadSitemapResponse = await this.readSitemapFromUrl(url);                              
+            if (sitemapDetail.data && sitePublication !== null ) {                            
+                console.log('eccomi');         
+                this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);                                       
+            }                
+            // console.log('no import Sitemap Article')                   
+        });            
+    }
+
+    //Prende solo il primo nodo di una sitemap
+    private async readFirstNodeSitemapFromUrl(url:string): Promise<ReadSitemapSingleNodeResponse> {
         try {
             const response = await axios.get(url);
             const xmlData = response.data;
@@ -108,10 +129,11 @@ class BaseApi {
         }        
     }
 
-    public async readSitemapFromUrl(url:string): Promise<ReadSitemapResponse> {
+    //Prende n elementi di una sitemap
+    private async readSitemapFromUrl(url:string): Promise<ReadSitemapResponse> {
         try {
             const response = await axios.get(url);
-            const xmlData = response.data;
+            const xmlData = response.data;            
         
             // Carica il documento XML utilizzando cheerio
             const node = cheerio.load(xmlData, { xmlMode: true });
@@ -123,7 +145,7 @@ class BaseApi {
             const urlData: UrlNode[] = [];
             
             // Itero su tutti gli elementi <url>
-            urlNodes.each((index, element) => {
+            urlNodes.each((index, element) => {                
                 const locValue = node(element).find('loc').text();
                 const lastmodValue = node(element).find('lastmod').text();
                 
@@ -138,7 +160,7 @@ class BaseApi {
                 success: true,
                 data: urlData
             };
-            
+                        
             return result;
 
         } catch (error) {            
@@ -154,6 +176,7 @@ class BaseApi {
 
     
     public async insertOriginalArticle(site:SiteWithIdType, sitePublication:SitePublicationWithIdType, sitemapDetail:ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {
+        console.log('sitemapDetail');     
         if (sitemapDetail.data) {     
             for (const urlNode of sitemapDetail.data) {
                 const existArticle = await this.getArticleByUrl(urlNode.loc);

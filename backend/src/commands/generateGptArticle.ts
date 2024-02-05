@@ -8,6 +8,7 @@ program.version('1.0.0').description('CLI team commander')
         const chatGptApi:ChatGptApi = new ChatGptApi();
         switch( options.site ) {            
             case 'vanityfair.it':                                       
+            case 'ilcorrieredellacitta.com':                                       
                 chatGptApi.getArticleBySiteAndGenerate(options.site, 0);
             break;
         }
