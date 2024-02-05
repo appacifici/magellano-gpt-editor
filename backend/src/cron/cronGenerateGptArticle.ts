@@ -1,4 +1,4 @@
-import { CronJob } from 'cron';
+import { CronJob } 		from 'cron';
 import ChatGptApi       from '../services/ChatGptApi';
 
 const job = new CronJob(

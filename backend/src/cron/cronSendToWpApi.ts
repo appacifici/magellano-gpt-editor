@@ -1,5 +1,5 @@
-import { CronJob } from 'cron';
-import WordpressApi      from '../services/WordpressApi';
+import { CronJob } 		from 'cron';
+import WordpressApi     from '../services/WordpressApi';
 
 const job = new CronJob(
 	'*/10 * * * *', // cronTime
