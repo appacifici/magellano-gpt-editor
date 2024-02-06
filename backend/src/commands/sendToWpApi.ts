@@ -9,7 +9,8 @@ program.version('1.0.0').description('CLI team commander')
         switch( options.site ) {            
             case 'vanityfair.it':                                       
             case 'ilcorrieredellacitta.com': 
-                wodpressApi.sendToWPApi(options.site, 0);                
+                // wodpressApi.sendToWPApi(options.site, 0);                
+                wodpressApi.getImagesFromWordPress(options.site);                
             break;
         } 
     });

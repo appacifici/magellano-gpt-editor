@@ -14,7 +14,32 @@ class WordpressApi {
     constructor() {
         connectMongoDB();
     }
-
+    
+    public async getImagesFromWordPress(siteName: string) {
+        try {
+            const site: SiteWithIdType | null                       = await Site.findOne({ site: siteName });
+            const sitePublication:SitePublicationWithIdType|null    = await SitePublication.findOne({ sitePublication: site?.sitePublication.toString() }); 
+            if( sitePublication !== null ) {
+                const response = await axios.get(sitePublication.url);
+                
+                if (response.data && Array.isArray(response.data)) {
+                    response.data.forEach(image => {
+                        console.log('Image ID:', image.id);
+                        console.log('Image Title:', image.title.rendered);
+                        console.log('Image URL:', image.source_url);
+                        console.log('Image Alt Text:', image.alt_text);
+                        console.log('Image Description:', image.description);
+                        console.log('---------------------------');
+                    });
+                } else {
+                    console.log('No images found.');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching images:', error);
+        }        
+    }
+    
     public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {        
         const site: SiteWithIdType | null                       = await Site.findOne({ site: siteName });
         const article: ArticleWithIdType | null                 = await Article.findOne({ site: site?._id, send: send, genarateGpt: 1 });

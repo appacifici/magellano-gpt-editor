@@ -14,10 +14,19 @@ const sitePublicationToInsert:SitePublicationArrayType = [
     {   sitePublication:    'cronacalive.it', 
         tokenUrl:           'https://www.cronacalive.it/wp-json/jwt-auth/v1/token',
         url:                'https://www.cronacalive.it/wp-json/wp/v2/posts',
+        urlImages:           'https://www.cronacalive.it/wp-json/wp/v2/media',
         username:           'Admin',  
         password:           'dUJ44cXYK5%DtCKBW8B%6xy(',  
         active:             1
-    }
+    },
+    {   sitePublication:    'roma.cronacalive.it', 
+        tokenUrl:           'https://roma.cronacalive.it/wp-json/jwt-auth/v1/token',
+        url:                'https://roma.cronacalive.it/wp-json/wp/v2/posts',
+        urlImages:           'https://www.cronacalive.it/wp-json/wp/v2/media',
+        username:           'Administrator',  
+        password:           'rl5Bmi&$9VXAVyEZJv',  
+        active:             1
+    },
 ];
 
 SitePublication.insertMany(sitePublicationToInsert)
@@ -34,6 +43,15 @@ const sitesToInsert:SiteArrayType = [
         site:                   'vanityfair.it', 
         sitePublication:        'cronacalive.it', 
         url:                    'https://www.vanityfair.it/sitemap.xml',
+        active:                 1, 
+        format:                 'sitemap',
+        categoryPublishSite:    1,
+        userPublishSite:        19,
+    },
+    { 
+        site:                   'ilcorrieredellacitta.com', 
+        sitePublication:        'roma.cronacalive.it', 
+        url:                    'https://www.ilcorrieredellacitta.com/sitemap-news.xml',
         active:                 1, 
         format:                 'sitemap',
         categoryPublishSite:    1,

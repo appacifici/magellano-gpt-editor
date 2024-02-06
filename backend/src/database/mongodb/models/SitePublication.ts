@@ -4,6 +4,7 @@ type SitePublicationType = {
     sitePublication:    string;
     tokenUrl:           string;
     url:                string;
+    urlImages:          string;
     username:           string;
     password:           string; 
     active:             number;   
@@ -25,6 +26,11 @@ const SitePublicationSchema   = new Schema({
         maxlength:  500
     },    
     url: { 
+        type:       String, 
+        required:   true, 
+        maxlength:  500
+    },    
+    urlImages: { 
         type:       String, 
         required:   true, 
         maxlength:  500

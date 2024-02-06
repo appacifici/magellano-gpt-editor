@@ -94,7 +94,7 @@ sudo systemctl enable mongod
 #Firewall
 
 sudo ufw status numbered
-sudo ufw allow from 79.56.220.84 to any port 27017
+sudo ufw allow from 87.16.111.41 to any port 27017
 sudo ufw allow 22
 sudo ufw enable
 sudo ufw status numbered
