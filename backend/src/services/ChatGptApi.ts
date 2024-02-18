@@ -9,6 +9,7 @@ import { ScrapedData }                      from "../siteScrapers/interface/Vani
 import Article, { ArticleWithIdType}        from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
 import connectMongoDB                       from "../database/mongodb/connect";
+import { findImageByWords }                 from "./MongooseFind";
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 interface ChatCompletionRequest {
@@ -18,7 +19,10 @@ interface ChatCompletionRequest {
     prompt: { role: string; content: string }[];
 }
 
-class ChatGptApi {    
+class ChatGptApi {
+    static getCsvKeywords(titleGpt: string) {
+        throw new Error("Method not implemented.");
+    }    
     
     openai  = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
     md      = new MarkdownIt();
@@ -38,17 +42,10 @@ class ChatGptApi {
                     metaTitle: article.title,
                     metaDescription: article.description
                 }
-                const articleGpt:string|null|null        = await this.processArticle(data);
-                //console.log(articleGpt);
-
+                const articleGpt:string|null|null   = await this.processArticle(data);
                 const titleGpt:string|null          = await this.processTitle(articleGpt);
-                console.log(siteName+': '+titleGpt);
-
                 const descriptionGpt:string|null    = await this.processDescription(articleGpt);
-                //console.log(descriptionGpt);
-
-                const h1Gpt:string|null             = await this.processH1(articleGpt);
-                //console.log(h1Gpt);
+                const h1Gpt:string|null             = await this.processH1(articleGpt);                
 
                 // Se articleGpt è valido, aggiorna il campo bodyGpt dell'articolo
                 if (articleGpt !== null) {
@@ -178,6 +175,30 @@ class ChatGptApi {
                         {"role": "user", "content": `utilizza massimo 80 caratteri`},
                         {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel testo, e ricorda di non superare gli 80 caratteri."},
+                    ],
+                    model: "gpt-3.5-turbo-1106",
+                    temperature: 0.6,
+                    top_p: 0.9,
+                  });
+                
+                  return completion.choices[0].message.content;
+            }
+            return null;
+        } catch (error) {
+            console.error('Errore durante l\'elaborazione h1:', error);
+            return '';
+        }        
+    }
+
+    public async getCsvKeywords(title:string|null): Promise<string | null> {
+        try {                            
+            
+            if (title) {
+                const completion = await this.openai.chat.completions.create({
+                    messages: [                      
+                        {"role": "user", "content": title},       
+                        {"role": "user", "content": `Crea un csv con separatore con queste intestazioni: "keyword,peso", con la lista di keywords da massimo 1 parola, aggiungi il peso che hanno nella ricerca`},                                                
+                        {"role": "user", "content": `Rispondimi solo con il cvs, non aggiungere altro testo alla risposta`},                        
                     ],
                     model: "gpt-3.5-turbo-1106",
                     temperature: 0.6,

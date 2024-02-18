@@ -7,9 +7,8 @@ program.version('1.0.0').description('CLI team commander')
     .action((options) => {            
         const wodpressApi = new WordpressApi();
         switch( options.site ) {            
-            case 'vanityfair.it':                                       
-            case 'ilcorrieredellacitta.com': 
-                wodpressApi.sendToWPApi(options.site, 0);                
+            case 'roma.cronacalive.it':                                             
+                wodpressApi.getImagesFromWordPress(options.site);        
             break;
         } 
     });

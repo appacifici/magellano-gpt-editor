@@ -2,13 +2,15 @@ import mongoose, { Model }                          from 'mongoose';
 import connectMongoDB                               from '../database/mongodb/connect';
 import {ISite, SiteSchema, SiteArrayType}           from '../database/mongodb/models/Site';
 import {IArticle, ArticleSchema, ArticleArrayType}  from '../database/mongodb/models/Article';
+import {IImage, ImageWPSchema, ImageArrayType}        from '../database/mongodb/models/ImageWP';
 import { SitePublicationSchema, ISitePublication, SitePublicationArrayType } from '../database/mongodb/models/SitePublication';
 
 connectMongoDB();
 
-const SitePublication:      Model<ISitePublication>        = mongoose.model<ISitePublication>('SitePublication', SitePublicationSchema);
-const Site:      Model<ISite>        = mongoose.model<ISite>('Site', SiteSchema);
-const Article:   Model<IArticle>     = mongoose.model<IArticle>('Article', ArticleSchema);
+const SitePublication:      Model<ISitePublication>         = mongoose.model<ISitePublication>('SitePublication', SitePublicationSchema);
+const Site:                 Model<ISite>                    = mongoose.model<ISite>('Site', SiteSchema);
+const Article:              Model<IArticle>                 = mongoose.model<IArticle>('Article', ArticleSchema);
+const ImageWP:              Model<IImage>                   = mongoose.model<IImage>('ImageWP', ImageWPSchema);
 
 const sitePublicationToInsert:SitePublicationArrayType = [
     {   sitePublication:    'cronacalive.it', 
@@ -17,7 +19,8 @@ const sitePublicationToInsert:SitePublicationArrayType = [
         urlImages:           'https://www.cronacalive.it/wp-json/wp/v2/media',
         username:           'Admin',  
         password:           'dUJ44cXYK5%DtCKBW8B%6xy(',  
-        active:             1
+        active:             1,
+        page:               1,
     },
     {   sitePublication:    'roma.cronacalive.it', 
         tokenUrl:           'https://roma.cronacalive.it/wp-json/jwt-auth/v1/token',
@@ -25,7 +28,8 @@ const sitePublicationToInsert:SitePublicationArrayType = [
         urlImages:           'https://www.cronacalive.it/wp-json/wp/v2/media',
         username:           'Administrator',  
         password:           'rl5Bmi&$9VXAVyEZJv',  
-        active:             1
+        active:             1,
+        page:               1,
     },
 ];
 

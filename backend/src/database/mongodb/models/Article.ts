@@ -29,7 +29,7 @@ const ArticleSchema   = new Schema({
         ref: 'Site',
         required: true
     },
-    sitePublication: { 
+    sitePublication: {
         type: Schema.Types.ObjectId, 
         ref: 'SitePublication',
         required: true

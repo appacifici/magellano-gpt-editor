@@ -9,6 +9,7 @@
     "axios": "^1.6.5",
     "cheerio": "^1.0.0-rc.12",
     "cron": "^3.1.6",
+    "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "deep-diff": "^1.0.2",
     "dotenv": "^16.3.1",
@@ -19,14 +20,14 @@
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.7.2",
     "ts-loader": "^9.5.0",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
-    "wpapi": "^1.2.2",
-    "ts-node": "^10.9.1"
+    "wpapi": "^1.2.2"
   },
   "devDependencies": {
     "@types/markdown-it": "^13.0.7",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.9.4",
-    "@types/wpapi": "^1.1.4"    
+    "@types/wpapi": "^1.1.4"
   }
 }

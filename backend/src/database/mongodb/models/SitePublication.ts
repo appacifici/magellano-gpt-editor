@@ -8,6 +8,7 @@ type SitePublicationType = {
     username:           string;
     password:           string; 
     active:             number;   
+    page:               number;   
 }
 
 interface ISitePublication extends Document, Omit<SitePublicationType, '_id'> {}
@@ -20,6 +21,10 @@ const SitePublicationSchema   = new Schema({
         type:       String, 
         required:   true 
     },    
+    page: {
+        type:       Number,
+        required:   true
+    },
     tokenUrl: { 
         type:       String, 
         required:   true, 
