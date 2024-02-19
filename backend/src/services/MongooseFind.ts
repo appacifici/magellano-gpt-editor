@@ -1,6 +1,4 @@
 import ImageWP from "../database/mongodb/models/ImageWP";
-import { Aggregate } from 'mongoose';
-
 
 async function findImageByWords2(words: any) {
     // Creare un array di espressioni regolari per ogni parola
@@ -70,9 +68,7 @@ async function findImageByWords(keywordWithWeights: [], sitePublicationId: any) 
             $sort: { score: -1 } // Ordina i risultati per punteggio in ordine decrescente
         }
     ]);
-
     return risultati[0];
 }
-
 
 export {findImageByWords};

@@ -1,8 +1,11 @@
 
 import axios                                from "axios";
 import dotenv                               from 'dotenv';
+import * as fs                              from 'fs';
+import FormData                             from 'form-data';
 import csv                                  from 'csv-parser';
 import { Readable }                         from "stream";
+
 import Article, { ArticleWithIdType }       from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
 import connectMongoDB                       from "../database/mongodb/connect";
@@ -69,6 +72,49 @@ class WordpressApi {
             process.exit();
         }       
     }
+
+    private async downloadImage(url: string, outputPath: string): Promise<void> {
+        const response = await axios({
+            method: 'GET',
+            url: url,
+            responseType: 'stream'
+        });
+    
+        response.data.pipe(fs.createWriteStream(outputPath));
+    
+        return new Promise((resolve, reject) => {
+            response.data.on('end', () => {
+                resolve();
+            });
+    
+            response.data.on('error', (err: Error) => {
+                reject(err);
+            });
+        });
+    }
+
+
+    private async uploadImageAndGetId(imagePath: string, token: string): Promise<string> {
+        const pathSave = 'path/to/save/image.jpg';
+        this.downloadImage(imagePath, pathSave);
+
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(pathSave));
+    
+        try {
+            const response = await axios.post('WORDPRESS_MEDIA_UPLOAD_URL', formData, {
+                headers: {
+                    ...formData.getHeaders(),
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+    
+            return response.data.id;
+        } catch (error) {
+            console.error('Errore durante il caricamento dell\'immagine:', error);
+            throw error; // Rilancia l'errore per gestirlo in un punto superiore
+        }
+    }
     
     public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {
         const site: SiteWithIdType | null                       = await Site.findOne({ site: siteName });
@@ -95,7 +141,6 @@ class WordpressApi {
 
         // Crea uno stream di lettura dalla stringa CSV
         const readableStream = Readable.from([csvString]);
-
         
         readableStream
             .pipe(csv())
@@ -103,10 +148,15 @@ class WordpressApi {
             .on('end', async () => {
                 console.log(results);
             
-                const imageWP = await findImageByWords(results, sitePublication._id);
+                let imageWP = await findImageByWords(results, sitePublication._id);
                 console.log("=>"+article.titleGpt);
                 console.log(imageWP);
-                
+                if( article.titleGpt != undefined ) {
+                    const words = this.adaptReponseWeight(article.titleGpt);
+                    imageWP = await findImageByWords(words,  sitePublication._id);
+                }
+
+                const imageId = this.uploadImageAndGetId(imageWP.imageLink, sitePublication.tokenUrl);
 
                 const userData = {
                     username: sitePublication.username,
@@ -141,31 +191,32 @@ class WordpressApi {
                             yoast_meta: {
                                 description: article.descriptionGpt
                             },
-                            status: 'publish',                                                                        
+                            status: 'publish',   
+                            featured_media: imageId                                                                     
                         };
 
                         // Effettua la richiesta POST per creare il post
-                        // axios.post(wordpressAPIURL, postData, {
-                        //     headers: {
-                        //       'Authorization': `Bearer ${token}`
-                        //     }
-                        // })
-                        // .then(response => {
-                        //     console.log(siteName+': Post inserito con successo:');
-                        //     const filtro = { _id: article._id };
-                        //     const aggiornamento = { send: 1 }; // Specifica i campi da aggiornare e i loro nuovi valori
+                        axios.post(wordpressAPIURL, postData, {
+                            headers: {
+                              'Authorization': `Bearer ${token}`
+                            }
+                        })
+                        .then(response => {
+                            console.log(siteName+': Post inserito con successo:');
+                            const filtro = { _id: article._id };
+                            const aggiornamento = { send: 1 }; // Specifica i campi da aggiornare e i loro nuovi valori
 
-                        //     Article.findOneAndUpdate(filtro, aggiornamento, { new: true })
-                        //     .then((documentoAggiornato) => {
-                        //         console.log(siteName+': Set send 1 avvenuta con successo');
-                        //     })
-                        //     .catch((errore) => {
-                        //         console.log(siteName+': Errore send:', response.data);
-                        //     });
-                        // })
-                        // .catch(error => {
-                        //     console.error(siteName+': Errore durante l\'inserimento del post:', error.response.data);
-                        // });
+                            Article.findOneAndUpdate(filtro, aggiornamento, { new: true })
+                            .then((documentoAggiornato) => {
+                                console.log(siteName+': Set send 1 avvenuta con successo');
+                            })
+                            .catch((errore) => {
+                                console.log(siteName+': Errore send:', response.data);
+                            });
+                        })
+                        .catch(error => {
+                            console.error(siteName+': Errore durante l\'inserimento del post:', error.response.data);
+                        });
                     }
                 })
                 .catch(error => {
@@ -175,13 +226,18 @@ class WordpressApi {
         return true;
     }
 
-    public rimuoviCongiunzioniArticoli(testo:string) {
+    public adaptReponseWeight(testo:string):any {
         // Array di congiunzioni e articoli da rimuovere
-        const paroleDaRimuovere = /\b(e|ed|o|dei|nei|nella|nel|sulla|ma|per|che|di|da|in|con|su|per|tra|fra|un|:|ad|una|uno|il|la|i|le|gli|l|suoi)\b/g;
+        const paroleDaRimuovere = /\b(a|abbia|abbiamo|abbiano|abbiate|ad|adesso|ai|al|alla|alle|allo|allora|altre|altri|altro|anche|ancora|avemmo|avendo|avesse|avessero|avessi|avessimo|aveste|avesti|avete|aveva|avevamo|avevano|avevate|avevi|avevo|avrai|avranno|avrebbe|avrebbero|avrei|avremmo|avremo|avreste|avresti|avrete|avrà|avrò|avuta|avute|avuti|avuto|c|che|chi|ci|coi|col|come|con|contro|cui|da|dagli|dai|dal|dall|dalla|dalle|dallo|degl|degli|dei|del|dell|della|delle|dello|dentro|di|dopo|dove|e|ebbe|ebbero|ebbi|ecc|ed|era|erano|eravamo|eravate|eri|ero|esempio|essa|esse|essendo|esser|essere|essi|essimo|esso|estate|farai|faranno|fare|farebbe|farebbero|farei|faremmo|faremo|fareste|faresti|farete|farà|farò|fece|fecero|feci|fin|finalmente|finche|fine|fino|forse|fosse|fossero|fossi|fossimo|foste|fosti|fra|frattempo|fu|fui|fummo|furono|giu|ha|hai|hanno|ho|i|il|improvviso|in|infatti|insieme|intanto|io|l|la|lavoro|le|lei|li|lo|loro|lui|lungo|ma|magari|mai|male|malgrado|malissimo|me|medesimo|mediante|meglio|meno|mentre|mesi|mezzo|mi|mia|mie|miei|mila|miliardi|milio|molta|molti|molto|momento|mondo|ne|negli|nei|nel|nell|nella|nelle|nello|no|noi|nome|non|nondimeno|nonsia|nostra|nostre|nostri|nostro|o|od|oggi|ogni|ognuna|ognuno|oltre|oppure|ora|otto|paese|parecchi|parecchie|parecchio|parte|partendo|peccato|peggio|per|perche|perché|perciò|perfino|pero|persino|persone|piu|piuttosto|più|pochissimo|poco|poi|poiche|possa|possedere|posteriore|posto|potrebbe|preferibilmente|presa|press|prima|primo|proprio|puoi|pure|purtroppo|può|qua|quale|quali|qualcosa|qualcuna|qualcuno|quale|quali|qualunque|quando|quanto|quasi|quattro|quel|quella|quelli|quelle|quello|quest|questa|queste|questi|questo|qui|quindi|quinto|realmente|recente|recentemente|registrazione|relativo|riecco|salvo|sara|sarai|saranno|sarebbe|sarebbero|sarei|saremmo|saremo|sareste|saresti|sarete|sarà|sarò|scola|scopo|scorso|se|secondo|seguente|seguito|sei|sembra|sembrare|sembrato|sembrava|sembri|sempre|senza|sette|si|sia|siamo|siano|siate|siete|sig|solito|solo|soltanto|sono|sopra|soprattutto|sotto|spesso|sta|stai|stando|stanno|starai|staranno|starebbe|starebbero|starei|staremmo|staremo|stareste|staresti|starete|starà|starò|stata|state|stati|stato|stava|stavamo|stavano|stavate|stavi|stavo|stemmo|stessa|stesse|stessero|stessi|stessimo|stesso|steste|stesti|stette|stettero|stetti|stia)\b/g;
         // Rimuovi le congiunzioni e gli articoli sostituendoli con una stringa vuota
 
         const testoPulito = testo.replace(paroleDaRimuovere, '');
-        return testoPulito;
+        const parole = testoPulito.split(' ');
+
+        // Crea un array finale nel formato desiderato
+        const arrayFinale = parole.map(parola => {
+            return { keyword: parola.toLowerCase(), peso: 1 };
+        });        
     }
 }
 
