@@ -197,8 +197,11 @@ class ChatGptApi {
                 const completion = await this.openai.chat.completions.create({
                     messages: [                      
                         {"role": "user", "content": title},       
-                        {"role": "user", "content": `Crea un csv con separatore con queste intestazioni: "keyword,peso", con la lista di keywords da massimo 1 parola, aggiungi il peso che hanno nella ricerca`},                                                
-                        {"role": "user", "content": `Rispondimi solo con il cvs, non aggiungere altro testo alla risposta`},                        
+                        {"role": "user", "content": `Crea un json con la lista di keywords da massimo 1 parola, aggiungi il peso che hanno nella ricerca`},                                                
+                        {"role": "user", "content": `Rispondimi solo con un json in questo formato:[
+                            { keyword: string, peso: int },
+                            { keyword: string, peso: int }                            
+                          ]`},                        
                     ],
                     model: "gpt-3.5-turbo-1106",
                     temperature: 0.6,

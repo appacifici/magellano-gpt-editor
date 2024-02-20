@@ -25,7 +25,7 @@ const sitePublicationToInsert:SitePublicationArrayType = [
     {   sitePublication:    'roma.cronacalive.it', 
         tokenUrl:           'https://roma.cronacalive.it/wp-json/jwt-auth/v1/token',
         url:                'https://roma.cronacalive.it/wp-json/wp/v2/posts',
-        urlImages:           'https://www.cronacalive.it/wp-json/wp/v2/media',
+        urlImages:          'https://roma.cronacalive.it/wp-json/wp/v2/media',
         username:           'Administrator',  
         password:           'rl5Bmi&$9VXAVyEZJv',  
         active:             1,
