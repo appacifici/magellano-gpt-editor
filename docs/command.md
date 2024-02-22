@@ -18,3 +18,9 @@ NODE_ENV=production npx ts-node src/commands/importSitemapArticle.ts -s ilcorrie
 NODE_ENV=production npx ts-node src/commands/generateGptArticle.ts -s ilcorrieredellacitta.com
 NODE_ENV=production npx ts-node src/commands/getWpApi.ts -s roma.cronacalive.it
 NODE_ENV=production npx ts-node src/commands/sendToWpApi.ts -s ilcorrieredellacitta.com
+
+
+NODE_ENV=production forever start  src/forever/foreverGetWpApi.cjs
+NODE_ENV=production forever start  src/forever/foreverImportSitemapArticle.cjs
+NODE_ENV=production forever start  src/forever/foreverGenerateGptArticle.cjs
+NODE_ENV=production forever start  src/forever/foreverSendToWpApi.cjs

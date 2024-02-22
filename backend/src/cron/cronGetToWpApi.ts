@@ -5,7 +5,7 @@ const job = new CronJob(
 	'*/10 * * * *', // cronTime
 	function () {		
 		const wodpressApi = new WordpressApi();
-        wodpressApi.sendToWPApi('ilcorrieredellacitta.com', 0); 
+        wodpressApi.getImagesFromWordPress('roma.cronacalive.it'); 
 	}, // onTick
 	null, // onComplete
 	true, // start
