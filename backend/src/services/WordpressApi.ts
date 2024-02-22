@@ -99,7 +99,7 @@ class WordpressApi {
         const imageName = titleGpt !== undefined ? this.removeStopWords(titleGpt) : 'img_'+Math.floor(Math.random() * (1000 - 1 + 1)) + 1;
         const newImg    = imageName.replace(/ /g, "_");
 
-        const pathSave = `${process.env.OPENAI_API_KEY}${newImg}.jpg`;
+        const pathSave = `${process.env.PATH_DOWNALOAD}${newImg}.jpg`;
         await this.downloadImage(imagePath, pathSave);
     
         const formData = new FormData();
