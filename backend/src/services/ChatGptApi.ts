@@ -120,7 +120,7 @@ class ChatGptApi {
                 const completion = await this.openai.chat.completions.create({
                     messages: [      
                         {"role": "user", "content": articleGpt},                  
-                        {"role": "user", "content": `Crea il meta title seo per il testo che ti ho fornito, scrivi tutto in minuscolo tranne le iniziali dei nomi propri di persona e della prima parola`},
+                        {"role": "user", "content": `Crea il meta title seo per il testo che ti ho fornito, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola`},
                         {"role": "user", "content": `utilizza massimo 80 caratteri`},
                         {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel titolo, e ricorda di non superare gli 80 caratteri."},
@@ -145,7 +145,7 @@ class ChatGptApi {
                 const completion = await this.openai.chat.completions.create({
                     messages: [          
                         {"role": "user", "content": articleGpt},                        
-                        {"role": "user", "content": `Crea una meta description SEO incisiva in italiano per il testo che ti ho fornito, scrivi tutto in minuscolo tranne le iniziali dei nomi propri di persona e della prima parola.`},
+                        {"role": "user", "content": `Crea una meta description SEO incisiva in italiano per il testo che ti ho fornito, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola.`},
                         {"role": "user", "content": `utilizza massimo 160 caratteri`},
                         {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nella descrizione, e ricorda di non superare gli 160 caratteri."},
@@ -171,7 +171,7 @@ class ChatGptApi {
                 const completion = await this.openai.chat.completions.create({
                     messages: [                      
                         {"role": "user", "content": articleGpt},       
-                        {"role": "user", "content": `Crea il testo per il tag h1 in ottica seo in italiano per il testo che ti ho fornito, scrivi tutto in minuscolo tranne le iniziali dei nomi propri di persona e della prima parola`},
+                        {"role": "user", "content": `Crea il testo per il tag h1 in ottica seo in italiano per il testo che ti ho fornito, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola`},
                         {"role": "user", "content": `utilizza massimo 80 caratteri`},
                         {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT e ricorda di non includere virgolette di alcun tipo nel testo, e ricorda di non superare gli 80 caratteri."},
