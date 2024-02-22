@@ -76,21 +76,26 @@ class BaseApi {
     /**
      * Legge una classica sitemap di url
      */
-    protected async readSimpleSitemap(siteName:string, scrapeWebsite:ScrapeWebsiteFunction) {        
-        const results:SiteArrayWithIdType = await this.getSitemapBySite(siteName);        
-        results.forEach(async (result:SiteWithIdType) => {   
-                           
-            const sitePublication:SitePublicationWithIdType|null = await this.getSitePublication(result.sitePublication);                
-            const url = result.url;                                                    
-            
-            const sitemapDetail:ReadSitemapResponse = await this.readSitemapFromUrl(url);                              
-            if (sitemapDetail.data && sitePublication !== null ) {                            
-                console.log('eccomi');         
-                this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);                                       
-            }                
-            // console.log('no import Sitemap Article')                   
-        });            
+    protected async readSimpleSitemap(siteName: string, scrapeWebsite: ScrapeWebsiteFunction) {        
+        const results: SiteArrayWithIdType = await this.getSitemapBySite(siteName);   
+    
+        const promises = results.map(async (result: SiteWithIdType) => {
+            const sitePublication: SitePublicationWithIdType | null = await this.getSitePublication(result.sitePublication);
+            const url = result.url;
+            const sitemapDetail: ReadSitemapResponse = await this.readSitemapFromUrl(url);
+    
+            console.log(sitemapDetail);     
+            if (sitemapDetail.data && sitePublication !== null) {                                               
+                await this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);                                                       
+            }   
+        });
+    
+        await Promise.all(promises); // Attendere il completamento di tutte le operazioni asincrone
+    
+        process.exit(); // Uscire dopo il completamento di tutte le operazioni
     }
+    
+    
 
     //Prende solo il primo nodo di una sitemap
     private async readFirstNodeSitemapFromUrl(url:string): Promise<ReadSitemapSingleNodeResponse> {

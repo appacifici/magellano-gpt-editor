@@ -13,12 +13,23 @@ import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../..
 
 
 class IlCorriereDellaCitta extends BaseApi {
+    action:string;
+
     constructor(action:string) {
         super();        
-        switch( action ) {
-            case 'readSitemap':
-                this.readSimpleSitemap('ilcorrieredellacitta.com', this.scrapeWebsite);
-            break;            
+        this.action = action;
+        this.init();
+    }
+
+    async init() {
+        switch (this.action) {
+            case 'readSitemap':                
+                await this.readSimpleSitemap('ilcorrieredellacitta.com', this.scrapeWebsite);           
+                
+                break;
+            default:
+                // Logica per altre azioni
+                break;
         }
     }
 

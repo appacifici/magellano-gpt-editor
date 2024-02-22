@@ -63,14 +63,15 @@ class WordpressApi {
                     this.getImagesFromWordPress(siteName);
                     console.log("Aggiornamento di 'page' completato con successo.");
                 } catch (error) {
-                    console.error("Si è verificato un errore durante l'aggiornamento di 'page':", error);
+                    console.error("Si è verificato un errore durante l'aggiornamento di 'page':");
+                    process.exit();
                 }                                
             }
             
         } catch (error) {
             console.error('Error fetching images',error);
             process.exit();
-        }       
+        }               
     }
 
     private async downloadImage(url: string, outputPath: string): Promise<void> {
@@ -127,8 +128,7 @@ class WordpressApi {
                     ...formData.getHeaders(),
                     'Authorization': `Bearer ${token}`
                 }
-            });
-            console.log(response.data);
+            });            
             return response.data;
         } catch (error) {
             console.error('Errore durante il caricamento dell\'immagine:', error);
@@ -138,113 +138,92 @@ class WordpressApi {
     
     
     public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {
-        const site: SiteWithIdType | null                       = await Site.findOne({ site: siteName });
-        const article: ArticleWithIdType | null                 = await Article.findOne({ site: site?._id, send: send, genarateGpt: 1 });
-        const sitePublication:SitePublicationWithIdType|null    = await SitePublication.findOne({ _id: article?.sitePublication.toString() });
-        if( sitePublication === null ) {
-            return false;
-        }
-        if( article === null || article.titleGpt === undefined ) {
-            return false;
-        }
-
-        const chatGptApi = new ChatGptApi();
-        const jsonString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
-
-        if (jsonString === null) {
-            console.error('La stringa CSV è null');    
-            console.log(jsonString);        
-            return false;
-        }
-
-        console.log(jsonString);
-        let results:any  = [];        
-        results = JSON.parse(jsonString);
-        console.log(results);
-
-        let imageWP = await findImageByWords(results, sitePublication._id);
-        console.log("=>"+article.titleGpt);
-        console.log(imageWP);
-        
-        if( imageWP == undefined && article.titleGpt !== undefined ) {
-            console.log('eccomi');
-            const words = this.adaptReponseWeight(article.titleGpt);
-            console.log(words);
-            imageWP = await findImageByWords(words,  sitePublication._id);                    
-        }
-        
-
-        const reponseImage:any = await this.uploadImageAndGetId(imageWP.imageLink, sitePublication, article.titleGpt);
-        console.log('imageId: '+reponseImage.id);
-        console.log('imageId: '+reponseImage.guid.raw);
-
-        const userData = {
-            username: sitePublication.username,
-            password: sitePublication.password
-        };
-
-        // URL per il punto finale di autenticazione JWT
-        const authUrl = sitePublication.tokenUrl;
-        
-        // Effettua una richiesta POST per generare il token di autenticazione
-        fetch(authUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(userData)
-        })
-        .then(response => response.json())
-            .then(data => {                
-                const token = data.token;                
-                if( article !== null ) {                
+        try {
+            const site: SiteWithIdType | null = await Site.findOne({ site: siteName });
+            const article: ArticleWithIdType | null = await Article.findOne({ site: site?._id, send: send, genarateGpt: 1 });
+            const sitePublication: SitePublicationWithIdType | null = await SitePublication.findOne({ _id: article?.sitePublication.toString() });
+            if (sitePublication === null || article === null || article.titleGpt === undefined) {
+                return false;
+            }
+    
+            const chatGptApi = new ChatGptApi();
+            const jsonString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
+            if (jsonString === null) {
+                console.error('La stringa CSV è null');
+                return false;
+            }
+    
+            let results: any = [];
+            results = JSON.parse(jsonString);            
+    
+            let imageWP = await findImageByWords(results, sitePublication._id);            
+    
+            if (imageWP === undefined && article.titleGpt !== undefined) {
+                console.log('eccomi');
+                const words = this.adaptReponseWeight(article.titleGpt);
+                console.log(words);
+                imageWP = await findImageByWords(words, sitePublication._id);
+            }
+    
+            const reponseImage: any = await this.uploadImageAndGetId(imageWP.imageLink, sitePublication, article.titleGpt);                
+            const userData = {
+                username: sitePublication.username,
+                password: sitePublication.password
+            };
+    
+            // URL per il punto finale di autenticazione JWT
+            const authUrl = sitePublication.tokenUrl;
+    
+            // Effettua una richiesta POST per generare il token di autenticazione
+            const tokenResponse = await fetch(authUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+            const tokenData = await tokenResponse.json();
+            const token = tokenData.token;
+    
+            if (article !== null) {
                 const auth = {
                     'Authorization': `Bearer ${token}`
                 };
-                const wordpressAPIURL   = sitePublication.url;        
-                const postData          = {
+                const wordpressAPIURL = sitePublication.url;
+                const postData = {
                     title: article.h1Gpt,
-                    content: `<img src="${reponseImage.guid.raw}">`+article.bodyGpt,
+                    content: `<img src="${reponseImage.guid.raw}">` + article.bodyGpt,
                     _yoast_wpseo_title: article.titleGpt,
                     _yoast_wpseo_metadesc: article.descriptionGpt,
                     yoast_title: article.titleGpt,
                     yoast_meta: {
                         description: article.descriptionGpt
                     },
-                    status: 'publish',   
-                    featured_media: reponseImage.id                                                                     
+                    status: 'publish',
+                    featured_media: reponseImage.id
                 };
-
+    
                 // Effettua la richiesta POST per creare il post
-                axios.post(wordpressAPIURL, postData, {
+                await axios.post(wordpressAPIURL, postData, {
                     headers: {
-                      'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`
                     }
-                })
-                .then(response => {
-                    console.log(siteName+': Post inserito con successo:');
-                    const filtro = { _id: article._id };
-                    const aggiornamento = { send: 1 }; // Specifica i campi da aggiornare e i loro nuovi valori
-
-                    Article.findOneAndUpdate(filtro, aggiornamento, { new: true })
-                    .then((documentoAggiornato) => {
-                        console.log(siteName+': Set send 1 avvenuta con successo');
-                    })
-                    .catch((errore) => {
-                        console.log(siteName+': Errore send:', response.data);
-                    });
-                })
-                .catch(error => {
-                    console.error(siteName+': Errore durante l\'inserimento del post:', error.response.data);
                 });
+                console.log(siteName + ': Post inserito con successo:');
+    
+                // Aggiorna il campo 'send' dell'articolo
+                const filtro = { _id: article._id };
+                const aggiornamento = { send: 1 };
+                await Article.findOneAndUpdate(filtro, aggiornamento, { new: true });
+                console.log(siteName + ': Set send 1 avvenuta con successo');
             }
-        })
-        .catch(error => {
-            console.error(siteName+': Errore durante la generazione del token:');
-        });
-            
+        } catch (error) {
+            console.error(siteName + ': Errore durante l\'operazione:', error);
+            return false;
+        }
         return true;
     }
+    
 
 
     

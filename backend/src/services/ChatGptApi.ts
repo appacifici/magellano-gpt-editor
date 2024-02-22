@@ -31,41 +31,50 @@ class ChatGptApi {
         connectMongoDB();
     }
 
-    public async  getArticleBySiteAndGenerate(siteName: string, generateValue: number) {
-        try {            
-            const site:SiteWithIdType|null          = await Site.findOne({ site: siteName  });
-            const article:ArticleWithIdType|null    = await Article.findOne({ site: site?._id, genarateGpt: generateValue });
-            if(article !== null){
-                const data:ScrapedData = {
-                    bodyContainerHTML: article.body,
-                    h1Content: article.h1,
-                    metaTitle: article.title,
-                    metaDescription: article.description
-                }
-                const articleGpt:string|null|null   = await this.processArticle(data);
-                const titleGpt:string|null          = await this.processTitle(articleGpt);
-                const descriptionGpt:string|null    = await this.processDescription(articleGpt);
-                const h1Gpt:string|null             = await this.processH1(articleGpt);                
+    private ucfirst(str:string|null):string|null {
+        if (str == null || typeof str !== 'string' || str.length === 0) {
+            return null;
+        }
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
 
+    public async getArticleBySiteAndGenerate(siteName: string, generateValue: number) {
+        try {            
+            const site: SiteWithIdType | null       = await Site.findOne({ site: siteName });
+            const article: ArticleWithIdType | null = await Article.findOne({ site: site?._id, genarateGpt: generateValue });
+    
+            if (article !== null) {
+                const data: ScrapedData = {
+                    bodyContainerHTML:  article.body,
+                    h1Content:          article.h1,
+                    metaTitle:          article.title,
+                    metaDescription:    article.description
+                };
+    
+                const articleGpt: string | null | null  = await this.processArticle(data);
+                const titleGpt: string | null           = await this.processTitle(articleGpt);
+                const descriptionGpt: string | null     = await this.processDescription(articleGpt);
+                const h1Gpt: string | null              = await this.processH1(articleGpt);
+                console.log('fine richieste gpt');
+    
                 // Se articleGpt è valido, aggiorna il campo bodyGpt dell'articolo
                 if (articleGpt !== null) {
-                    await Article.updateOne({ _id: article._id }, 
-                        { $set: { 
-                            bodyGpt:        this.md.render(articleGpt), 
-                            titleGpt:       titleGpt, 
-                            descriptionGpt: descriptionGpt, 
-                            h1Gpt:          h1Gpt, 
-                            genarateGpt:    1 
-                        } 
+                    await Article.updateOne({ _id: article._id }, {
+                        $set: {
+                            bodyGpt:        this.md.render(articleGpt),
+                            titleGpt:       titleGpt,
+                            descriptionGpt: descriptionGpt,
+                            h1Gpt:          h1Gpt,
+                            genarateGpt:    1
+                        }
                     });
-                    console.log(siteName+ ': Campo bodyGpt dell\'articolo aggiornato con successo.');
+                    console.log(siteName + ': Campo bodyGpt dell\'articolo aggiornato con successo.');
                 } else {
-                    console.log(siteName+ ': Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
+                    console.log(siteName + ': Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
                 }
             }
-            
         } catch (error) {
-            console.error(siteName+ ': Errore durante il recupero degli articoli:', error);
+            console.error(siteName + ': Errore durante il recupero degli articoli:', error);
         }
     }
 
@@ -105,7 +114,7 @@ class ChatGptApi {
                     top_p: 0.9,
                   });
                   
-                  return completion.choices[0].message.content;
+                  return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
         } catch (error:any) {
@@ -132,7 +141,7 @@ class ChatGptApi {
                     top_p: 0.9,
                   });
                 
-                  return completion.choices[0].message.content;
+                  return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
         } catch (error) {
@@ -158,7 +167,7 @@ class ChatGptApi {
                     top_p: 0.9,
                   });
                 
-                  return completion.choices[0].message.content;
+                  return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
         } catch (error) {
@@ -185,7 +194,7 @@ class ChatGptApi {
                     top_p: 0.9,
                   });
                 
-                  return completion.choices[0].message.content;
+                  return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
         } catch (error) {
