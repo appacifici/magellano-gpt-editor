@@ -107,7 +107,7 @@ class ChatGptApi {
                         {"role": "user", "content": text},
                         {"role": "user", "content": `Scrivi il testo in maniera naturale in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola`},
                         {"role": "user", "content": "Ricordati che sei un giornalista di gossip che riscrive notizie in 600 parole con stile naturale, assicurandoti di non copiare, ma di riformulare il contenuto con lo stesso significato. Usa il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola. Metti in grassetto nomi e cognomi e frasi che ritieni importanti, e usa il corsivo per le citazioni importanti. Assicurati che il testo segua le linee guida SEO, Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT"},
-                        {"role": "user", "content": "I titoli di livello 2 (##), scrivili tutti in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola"}
+                        {"role": "user", "content": "I titoli di livello 2 (##), scrivili tutti in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola"},
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT, ricordati di usare il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo. Metti in grassetto nomi e cognomi e frasi che ritieni importanti in grassetto, e usa il corsivo per le citazioni"}
                     ],
                     model: "gpt-3.5-turbo-1106",
