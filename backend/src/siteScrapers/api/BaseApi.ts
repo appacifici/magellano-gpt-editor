@@ -92,7 +92,7 @@ class BaseApi {
     
         await Promise.all(promises); // Attendere il completamento di tutte le operazioni asincrone
     
-        process.exit(); // Uscire dopo il completamento di tutte le operazioni
+        process.exit(5); // Uscire dopo il completamento di tutte le operazioni
     }
     
     

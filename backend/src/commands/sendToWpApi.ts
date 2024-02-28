@@ -10,7 +10,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'vanityfair.it':
             case 'ilcorrieredellacitta.com':
                 await wodpressApi.sendToWPApi(options.site, 0); // Aggiungi await qui
-                process.exit(); // Ora puoi mettere l'exit qui
+                process.exit(1); // Ora puoi mettere l'exit qui
                 break;
         }
     });

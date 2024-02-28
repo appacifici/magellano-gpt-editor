@@ -11,7 +11,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'ilcorrieredellacitta.com':   
                 try {
                     await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    process.exit();
+                    process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);
                     process.exit(1); // Uscire con codice di errore

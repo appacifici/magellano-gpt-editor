@@ -66,9 +66,9 @@ const sitesToInsert:SiteArrayType = [
 Site.insertMany(sitesToInsert)
 .then((docs) => {
     console.log('Sites inserted successfully:', docs);
-    process.exit();
+    process.exit(1);
 })
 .catch((err) => {
     console.error('Error inserting Sites:', err);
-    process.exit();
+    process.exit(0);
 });

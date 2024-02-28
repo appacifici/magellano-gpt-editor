@@ -14,6 +14,8 @@ import SitePublication,
 import ImageWP,{ ImageType }                from "../database/mongodb/models/ImageWP";
 import { findImageByWords }                 from "./MongooseFind";
 import ChatGptApi                           from "./ChatGptApi";
+import { writeErrorLog }                    from "./Log";
+import { Console } from "console";
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 class WordpressApi {
@@ -64,13 +66,13 @@ class WordpressApi {
                     console.log("Aggiornamento di 'page' completato con successo.");
                 } catch (error) {
                     console.error("Si è verificato un errore durante l'aggiornamento di 'page':");
-                    process.exit();
+                    process.exit(1);
                 }                                
             }
             
         } catch (error) {
             console.error('Error fetching images',error);
-            process.exit();
+            process.exit(1);
         }               
     }
 
@@ -130,8 +132,8 @@ class WordpressApi {
                 }
             });            
             return response.data;
-        } catch (error) {
-            console.error('Errore durante il caricamento dell\'immagine:', error);
+        } catch (error) {            
+            writeErrorLog('Errore durante il caricamento dell\'immagine:'+ error);
             throw error; // Rilancia l'errore per gestirlo in un punto superiore
         }
     }
@@ -147,14 +149,22 @@ class WordpressApi {
             }
     
             const chatGptApi = new ChatGptApi();
-            const jsonString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
-            if (jsonString === null) {
-                console.error('La stringa CSV è null');
+            let textString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
+            if (textString == null) {
+                console.error(textString);
                 return false;
             }
-    
+
+            const regex = /\[[^\]]*\]/;
+            const jsonString = textString.match(regex);
+            if (jsonString == null) {
+                console.error(jsonString);
+                return false;
+            }
+
             let results: any = [];
-            results = JSON.parse(jsonString);            
+            results = JSON.parse(jsonString[0]);            
+            console.log(results);
     
             let imageWP = await findImageByWords(results, sitePublication._id);            
     
@@ -217,8 +227,9 @@ class WordpressApi {
                 await Article.findOneAndUpdate(filtro, aggiornamento, { new: true });
                 console.log(siteName + ': Set send 1 avvenuta con successo');
             }
-        } catch (error) {
-            console.error(siteName + ': Errore durante l\'operazione:', error);
+        } catch (error) {            
+            console.log(siteName + ': Errore durante l\'operazione:');
+            writeErrorLog(siteName + ': Errore durante l\'operazione:');
             return false;
         }
         return true;

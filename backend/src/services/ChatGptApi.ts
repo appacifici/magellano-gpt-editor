@@ -1,5 +1,6 @@
 
 import axios, { AxiosResponse }             from "axios";
+import cheerio                              from 'cheerio';
 import dotenv                               from 'dotenv';
 import OpenAI                               from "openai";
 import MarkdownIt                           from 'markdown-it';
@@ -38,7 +39,7 @@ class ChatGptApi {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    public async getArticleBySiteAndGenerate(siteName: string, generateValue: number) {
+    public async getArticleBySiteAndGenerate(siteName: string, generateValue: number): Promise<boolean> {
         try {            
             const site: SiteWithIdType | null       = await Site.findOne({ site: siteName });
             const article: ArticleWithIdType | null = await Article.findOne({ site: site?._id, genarateGpt: generateValue });
@@ -69,13 +70,17 @@ class ChatGptApi {
                         }
                     });
                     console.log(siteName + ': Campo bodyGpt dell\'articolo aggiornato con successo.');
-                } else {
+                    return true;
+                } else {                    
                     console.log(siteName + ': Impossibile aggiornare il campo bodyGpt: articleGpt è null.');
+                    return false;
                 }
             }
-        } catch (error) {
+        } catch (error) {         
             console.error(siteName + ': Errore durante il recupero degli articoli:', error);
+            return false;
         }
+        return true;
     }
 
     public async leggiFile(filePath: string): Promise<string> {
@@ -103,19 +108,26 @@ class ChatGptApi {
                     messages: [
                         //Il messaggio di sistema aiuta a impostare il comportamento dell'assistente
                         {"role": "system", "content": "Riscrivi articolo e Adotta uno stile giornalistico professionale. Concentrati sull'uso di un linguaggio vario e ricco, evitando formule ripetitive o tipiche dell'IA. Struttura il testo come un vero pezzo giornalistico, diviso in capitoli con il formato Markdow (##), con un'introduzione accattivante, sviluppo approfondito e una conclusione significativa. Utilizza interviste, citazioni e dati verificabili per arricchire il contenuto. Assicurati di variare le lunghezze delle frasi e di includere elementi stilistici umani, come metafore leggere, aneddoti rilevanti e osservazioni incisive, per rendere il testo dinamico e coinvolgente. Evita l'uso di jargon tecnico e scrivi in modo che sia comprensibile e interessante sia per un pubblico generico sia per lettori esperti sull'argomento, non terminare mai l'articolo con in conclusione, Usa il formato html, includi titoli di livello 2 (##) per ogni paragrafo."},
+                        {"role": "system", "content": `I titoli dei vari capitoli devono essere scritti in maniera naturale NON in camelcase. ES: La traccia di Lazza: Un fenomeno sociale`},
+                        {"role": "system", "content": `⁠Non fare un uso eccessivo di titoli di livello 2 (##) e la parte testuale non deve essere eccessivamente breve con periodi troppo concisi`},
                         // I messaggi dell'utente forniscono richieste o commenti a cui l'assistente può rispondere
-                        {"role": "user", "content": text},
+                        {"role": "user", "content": text}, 
                         {"role": "user", "content": `Scrivi il testo in maniera naturale in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola`},
-                        {"role": "user", "content": "Ricordati che sei un giornalista di gossip che riscrive notizie in 600 parole con stile naturale, assicurandoti di non copiare, ma di riformulare il contenuto con lo stesso significato. Usa il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola. Metti in grassetto nomi e cognomi e frasi che ritieni importanti, e usa il corsivo per le citazioni importanti. Assicurati che il testo segua le linee guida SEO, Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT"},
-                        {"role": "user", "content": "I titoli di livello 2 (##), scrivili tutti in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola"},
+                        {"role": "user", "content": "Ricordati che sei un giornalista di gossip che riscrive notizie in 600 parole con stile naturale, assicurandoti di non copiare, ma di riformulare il contenuto con lo stesso significato. Usa il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo, scrivi tutto in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola. Metti in grassetto nomi e cognomi e frasi che ritieni importanti, e usa il corsivo per le citazioni importanti. Assicurati che il testo segua le linee guida SEO, Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT"},        
                         {"role": "user", "content": "Evita l'uso di frasi o parole tipicamente utilizzate dal modello ChatGPT, ricordati di usare il formato Markdown, includi titoli di livello 2 (##) per ogni paragrafo. Metti in grassetto nomi e cognomi e frasi che ritieni importanti in grassetto, e usa il corsivo per le citazioni"}
                     ],
                     model: "gpt-3.5-turbo-1106",
                     temperature: 0.6,
                     top_p: 0.9,
-                  });
+                });
                   
-                  return this.ucfirst(completion.choices[0].message.content);
+                let article = this.ucfirst(completion.choices[0].message.content);
+                if( article != null ) {
+                    article = article.replace(/<img[^>]*>/g, '');
+
+                }
+                return this.ucfirst(completion.choices[0].message.content);
+                
             }
             return null;
         } catch (error:any) {
@@ -131,7 +143,7 @@ class ChatGptApi {
                 const completion = await this.openai.chat.completions.create({
                     messages: [      
                         {"role": "user", "content": articleGpt},                  
-                        {"role": "user", "content": `Crea il meta title seo per il testo che ti ho fornito`},
+                        {"role": "user", "content": `Crea il meta title seo per il testo che ti ho fornito, utilizzando la tecnica del clickbait `},
                         {"role": "user", "content": `Scrivi il testo in maniera naturale in minuscolo, tranne le iniziali dei nomi propri di persona e della prima parola`},
                         {"role": "user", "content": `utilizza massimo 80 caratteri`},
                         {"role": "user", "content": `Non inserire mai le virgolette all'interno del titolo o apici doppi`},
