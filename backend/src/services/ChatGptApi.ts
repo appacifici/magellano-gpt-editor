@@ -10,7 +10,7 @@ import { ScrapedData }                      from "../siteScrapers/interface/Vani
 import Article, { ArticleWithIdType}        from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
 import connectMongoDB                       from "../database/mongodb/connect";
-import { findImageByWords }                 from "./MongooseFind";
+import { writeErrorLog }                     from "./Log";
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 interface ChatCompletionRequest {
@@ -77,7 +77,8 @@ class ChatGptApi {
                 }
             }
         } catch (error) {         
-            console.error(siteName + ': Errore durante il recupero degli articoli:', error);
+            console.error(siteName + ': Errore durante il recupero degli articoli');
+            await writeErrorLog(siteName + ': Errore durante il recupero degli articoli:'+ error);
             return false;
         }
         return true;
@@ -85,16 +86,16 @@ class ChatGptApi {
 
     public async leggiFile(filePath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-          fs.readFile(filePath, 'utf8', (err: NodeJS.ErrnoException | null, data: string) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            resolve(data);
-          });
+            fs.readFile(filePath, 'utf8', async (err: NodeJS.ErrnoException | null, data: string) => {
+                if (err) {
+                    await writeErrorLog('LeggiFile:' + filePath);
+                    reject(err);
+                    return;
+                }
+                resolve(data);
+            });
         });
-      }
-      
+    }
 
     public async processArticle(scrapedData:ScrapedData): Promise<string | null> {
         try {      
@@ -131,7 +132,8 @@ class ChatGptApi {
             }
             return null;
         } catch (error:any) {
-            console.error('Errore durante l\'elaborazione dell\'articolo:', error.error);
+            await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:'+ error.error);
+            console.error('Errore durante l\'elaborazione dell\'articolo');
             return null;
         }
     }
@@ -158,7 +160,8 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione title:', error);
+            console.error('Errore durante l\'elaborazione title:');
+            await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:'+ error);
             return '';
         }        
     }
@@ -184,7 +187,8 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione description:', error);
+            console.error('Errore durante l\'elaborazione description');
+            await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:'+ error);
             return '';
         }        
     }
@@ -211,7 +215,8 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione h1:', error);
+            console.error('Errore durante l\'elaborazione h1');
+            await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:'+ error);
             return '';
         }        
     }
@@ -238,11 +243,11 @@ class ChatGptApi {
             }
             return null;
         } catch (error) {
-            console.error('Errore durante l\'elaborazione h1:', error);
+            console.error('Errore durante l\'elaborazione h1');
+            await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:'+ error);
             return '';
         }        
     }
-    
 }
 
 export {ChatCompletionRequest};

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Funzione per scrivere il log di errore su file
-function writeErrorLog(logError:string) {
+async function writeErrorLog(logError:string): Promise<boolean> {
     // Otteniamo la data corrente
     const dataCorrente = new Date();
     // Formattiamo la data nel formato YYYY-MM-DD
@@ -13,20 +13,23 @@ function writeErrorLog(logError:string) {
     // Costruiamo il percorso del file utilizzando la data
     const percorsoFile = path.join(cartellaLogs, `error_logs_${dataFormattata}.txt`);
 
+    const commandLine = process.argv[1];
+    const nomeFile = path.basename(commandLine);
+    console.log('Comando di avvio:', commandLine);
+
+
     // Testo da scrivere nel file
     const testoDaScrivere = `[${dataCorrente.toISOString()}] ${logError}\n`;
 
-    console.log(percorsoFile);
-    console.log(testoDaScrivere);
-
     // Scriviamo il log di errore sul file
-    fs.appendFile(percorsoFile, testoDaScrivere, (err) => {
-        if (err) {
-            console.error('Errore durante la scrittura del log di errore:', err);
-        } else {
-            console.log('Log di errore salvato correttamente.');
-        }
-    });
+    try {
+        await fs.promises.appendFile(percorsoFile, testoDaScrivere);
+        return true;
+        
+    } catch (err) {
+        console.error('Errore durante la scrittura del log di errore:', err);        
+        throw err; // Rilancia l'errore per gestirlo nel blocco catch esterno
+    }
 }
 
 export {writeErrorLog};

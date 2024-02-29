@@ -10,6 +10,7 @@ import { ReadSitemapSingleNodeResponse,
 import { ScrapedData }                          from "../interface/VanityfairInterface";
 import chatGptApi    from "../../services/ChatGptApi";
 import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
+import { writeErrorLog } from "../../services/Log";
 
 
 class IlCorriereDellaCitta extends BaseApi {
@@ -50,8 +51,8 @@ class IlCorriereDellaCitta extends BaseApi {
                 metaDescription: metaDescription
             };
         } catch (error) {
-            // Gestisci eventuali errori di richiesta HTTP o analisi HTML
-            console.error('Vanityfair.it: Errore durante lo scraping della pagina:', error);
+            await writeErrorLog(`IlCorriereDellaCitta: Errore durante lo scraping della pagina ${error}`);
+            console.error('IlCorriereDellaCitta.it: Errore durante lo scraping della pagina:', error);
             return null;
         }
     }
