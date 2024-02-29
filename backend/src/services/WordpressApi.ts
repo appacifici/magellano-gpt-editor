@@ -105,7 +105,9 @@ class WordpressApi {
     private async uploadImageAndGetId(imagePath: string, sitePublication: SitePublicationWithIdType, titleGpt:string|undefined): Promise<object> {
         const imageName = titleGpt !== undefined ? this.removeStopWords(titleGpt) : 'img_'+Math.floor(Math.random() * (1000 - 1 + 1)) + 1;
         let newImg      = imageName.replace(/ /g, "_");
-        newImg          = encodeURIComponent(imageName.replace(/\//g, ""));
+        newImg          = imageName.replace(/\//g, "");
+        newImg          = newImg.replace(/[^\w\s]/gi, '');
+        newImg          = newImg.replace(/\s+/g, '-');
 
         const pathSave = `${process.env.PATH_DOWNALOAD}${newImg}.jpg`;
         await this.downloadImage(imagePath, pathSave);
