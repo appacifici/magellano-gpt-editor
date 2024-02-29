@@ -133,6 +133,7 @@ class ChatGptApi {
             return null;
         } catch (error:any) {
             await writeErrorLog('processArticle: Errore durante l\'elaborazione dell\'articolo:'+ error.error);
+            await writeErrorLog(error.error);
             console.error('processArticle: Errore durante l\'elaborazione dell\'articolo');
             return null;
         }
