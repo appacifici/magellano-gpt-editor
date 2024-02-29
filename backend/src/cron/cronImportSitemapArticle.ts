@@ -3,7 +3,7 @@ import Vanityfair       from '../siteScrapers/api/Vanityfair';
 import IlCorriereDellaCitta       from '../siteScrapers/api/IlCorriereDellaCitta';
 
 const job = new CronJob(
-	'* * * * *', // cronTime
+	'*/50 * * * *', // cronTime
 	function () {		
         // new Vanityfair('readSitemap');        
         new IlCorriereDellaCitta('readSitemap');      
