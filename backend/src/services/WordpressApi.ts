@@ -79,27 +79,36 @@ class WordpressApi {
     }
 
     private async downloadImage(url: string, outputPath: string): Promise<void> {
-        const response = await axios({
-            method: 'GET',
-            url: url,
-            responseType: 'stream'
-        });
-    
-        response.data.pipe(fs.createWriteStream(outputPath));
-    
-        return new Promise((resolve, reject) => {
-            response.data.on('end', () => {                
-                console.log('getImagesFromWordPress: immagine scaricata correttamente');
-                resolve();                
+        try {
+            const response = await axios({
+                method: 'GET',
+                url: url,
+                responseType: 'stream'
             });
     
-            response.data.on('error', async (err: any) => { 
-                await writeErrorLog("downloadImage:" );
-                await writeErrorLog(err);
-                reject(err);
+            response.data.pipe(fs.createWriteStream(outputPath));
+    
+            await new Promise((resolve) => {
+                response.data.on('end', () => {
+                    console.log('getImagesFromWordPress: immagine scaricata correttamente');
+                    resolve(null); // Passiamo null o undefined come argomento
+                });
+    
+                response.data.on('error', async (err: any) => {
+                    await writeErrorLog("downloadImage:");
+                    await writeErrorLog(err);
+                    throw err; // Lancio l'errore per essere catturato dal blocco catch esterno
+                });
             });
-        }); 
+        } catch (error) {
+            // Gestione dell'errore
+            console.error("Si è verificato un errore durante il download dell'immagine");
+            await writeErrorLog("downloadImage:");
+            await writeErrorLog(error);
+            throw error; // Rilancio l'errore per propagarlo
+        }
     }
+    
 
 
     private async uploadImageAndGetId(imagePath: string, sitePublication: SitePublicationWithIdType, titleGpt:string|undefined): Promise<object> {
