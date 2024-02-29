@@ -41,8 +41,8 @@ class Vanityfair extends BaseApi {
                 metaDescription: metaDescription
             };
         } catch (error) {
-            await writeErrorLog(`Vanityfair.it: Errore durante lo scraping della pagina ${error}`);
-            console.error('Vanityfair.it: Errore durante lo scraping della pagina:', error);
+            await writeErrorLog(`scrapeWebsite: Vanityfair.it: Errore durante lo scraping della pagina ${error}`);
+            console.error('scrapeWebsite: Vanityfair.it: Errore durante lo scraping della pagina:', error);
             return null;
         }
     }

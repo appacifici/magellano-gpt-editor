@@ -2,21 +2,19 @@ import fs from 'fs';
 import path from 'path';
 
 // Funzione per scrivere il log di errore su file
-async function writeErrorLog(logError:string): Promise<boolean> {
-    // Otteniamo la data corrente
-    const dataCorrente = new Date();
-    // Formattiamo la data nel formato YYYY-MM-DD
-    const dataFormattata = dataCorrente.toISOString().slice(0, 10);
+async function writeErrorLog(logError:string): Promise<boolean> {    
+    const dataCorrente      = new Date();
+    const dataFormattata    = dataCorrente.toISOString().slice(0, 10);
+    const cartellaLogs      = path.join(`${process.env.PATH_LOGS}`, '');
 
-    const cartellaLogs = path.join(`${process.env.PATH_LOGS}`, '');
+    const commandLine       = process.argv[1];
+    let nomeFile            = path.basename(commandLine);
+    nomeFile                = nomeFile.replace('.ts', '.txt');
+    nomeFile                = nomeFile.replace('.cjs', '.txt');
+    console.log('Comando di avvio:', nomeFile);
 
     // Costruiamo il percorso del file utilizzando la data
-    const percorsoFile = path.join(cartellaLogs, `error_logs_${dataFormattata}.txt`);
-
-    const commandLine = process.argv[1];
-    const nomeFile = path.basename(commandLine);
-    console.log('Comando di avvio:', commandLine);
-
+    const percorsoFile = path.join(cartellaLogs, `${nomeFile}_error_${dataFormattata}.txt`);
 
     // Testo da scrivere nel file
     const testoDaScrivere = `[${dataCorrente.toISOString()}] ${logError}\n`;

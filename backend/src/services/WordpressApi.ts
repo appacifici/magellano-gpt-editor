@@ -47,31 +47,31 @@ class WordpressApi {
                             }
                             const newImage = new ImageWP(imageData);
                             await newImage.save();
-                            console.log(`Immagine con ID ${newImage.imageID} salvata correttamente.`);
+                            console.log(`getImagesFromWordPress: Immagine con ID ${newImage.imageID} salvata correttamente.`);
                         } catch (error) {
-                            await writeErrorLog(`Si è verificato un errore durante il salvataggio dell'immagine con ID ${image.id}: ${error}`);
-                            console.error(`Si è verificato un errore durante il salvataggio dell'immagine`);
+                            await writeErrorLog(`getImagesFromWordPress: Si è verificato un errore durante il salvataggio dell'immagine con ID ${image.id}: ${error}`);
+                            console.error(`getImagesFromWordPress: Si è verificato un errore durante il salvataggio dell'immagine`);
                         }
                     }
                 } else {
-                    console.log('No images found.');
+                    console.log('getImagesFromWordPress: No images found.');
                 }
                 
                 try {
                     sitePublication.page += 1;
                     await sitePublication.save();
                     this.getImagesFromWordPress(siteName);
-                    console.log("Aggiornamento di 'page' completato con successo.");
+                    console.log("getImagesFromWordPress: Aggiornamento di 'page' completato con successo.");
                 } catch (error) {
-                    console.error("Si è verificato un errore durante l'aggiornamento di 'page':"+page);
-                    await writeErrorLog("Si è verificato un errore durante l'aggiornamento di page");
+                    console.error("getImagesFromWordPress: Si è verificato un errore durante l'aggiornamento di 'page':"+page);
+                    await writeErrorLog("getImagesFromWordPress: Si è verificato un errore durante l'aggiornamento di page");
                     process.exit(1);
                 }                                
             }
             
         } catch (error:any) {
-            console.error('Error fetching images');
-            await writeErrorLog("Error fetching images:"+error.response.data.code);
+            console.error('getImagesFromWordPress: Error fetching images');
+            await writeErrorLog("getImagesFromWordPress: Error fetching images:"+error.response.data.code);
             process.exit(1);
         }               
     }
@@ -87,7 +87,7 @@ class WordpressApi {
     
         return new Promise((resolve, reject) => {
             response.data.on('end', () => {                
-                console.log('immagine scaricata correttamente');
+                console.log('getImagesFromWordPress: immagine scaricata correttamente');
                 resolve();                
             });
     
@@ -135,7 +135,8 @@ class WordpressApi {
             });                        
             return response.data;
         } catch (error) {            
-            await writeErrorLog('Errore durante il caricamento dell\'immagine:'+ error);
+            await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:');
+            await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:'+ error);
             throw error; // Rilancia l'errore per gestirlo in un punto superiore
         }
     }
@@ -224,17 +225,17 @@ class WordpressApi {
                         'Authorization': `Bearer ${token}`
                     }
                 });
-                console.log(siteName + ': Post inserito con successo:');
+                console.log('sendToWPApi: '+siteName + ': Post inserito con successo:');
     
                 // Aggiorna il campo 'send' dell'articolo
                 const filtro = { _id: article._id };
                 const aggiornamento = { send: 1 };
                 await Article.findOneAndUpdate(filtro, aggiornamento, { new: true });
-                console.log(siteName + ': Set send 1 avvenuta con successo');
+                console.log('sendToWPApi: '+siteName + ': Set send 1 avvenuta con successo');
             }
         } catch (error) {            
-            console.log(siteName + ': Errore durante l\'operazione:');
-            await writeErrorLog(siteName + ': Errore durante l\'operazione:');
+            console.log('sendToWPApi: '+siteName + ': Errore durante l\'operazione:');
+            await writeErrorLog('sendToWPApi: '+siteName + ': Errore durante l\'operazione:');
             return false;
         }
         return true;

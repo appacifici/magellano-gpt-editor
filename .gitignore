@@ -1,2 +1,4 @@
 /data
 /backend/node_modules
+/backend/download
+/backend/logs
