@@ -50,8 +50,9 @@ class IlCorriereDellaCitta extends BaseApi {
                 metaTitle: metaTitle,
                 metaDescription: metaDescription
             };
-        } catch (error) {
-            await writeErrorLog(`scrapeWebsite: IlCorriereDellaCitta: Errore durante lo scraping della pagina ${error}`);
+        } catch (error:any) {
+            await writeErrorLog(`scrapeWebsite: IlCorriereDellaCitta: Errore durante lo scraping della pagina`);
+            await writeErrorLog(error);
             console.error('scrapeWebsite: IlCorriereDellaCitta.it: Errore durante lo scraping della pagina:', error);
             return null;
         }

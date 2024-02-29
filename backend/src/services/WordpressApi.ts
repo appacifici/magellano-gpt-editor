@@ -48,8 +48,9 @@ class WordpressApi {
                             const newImage = new ImageWP(imageData);
                             await newImage.save();
                             console.log(`getImagesFromWordPress: Immagine con ID ${newImage.imageID} salvata correttamente.`);
-                        } catch (error) {
-                            await writeErrorLog(`getImagesFromWordPress: Si è verificato un errore durante il salvataggio dell'immagine con ID ${image.id}: ${error}`);
+                        } catch (error:any) {
+                            await writeErrorLog(`getImagesFromWordPress: Si è verificato un errore durante il salvataggio dell'immagine con ID ${image.id}`);
+                            await writeErrorLog(error);
                             console.error(`getImagesFromWordPress: Si è verificato un errore durante il salvataggio dell'immagine`);
                         }
                     }
@@ -64,14 +65,15 @@ class WordpressApi {
                     console.log("getImagesFromWordPress: Aggiornamento di 'page' completato con successo.");
                 } catch (error) {
                     console.error("getImagesFromWordPress: Si è verificato un errore durante l'aggiornamento di 'page':"+page);
-                    await writeErrorLog("getImagesFromWordPress: Si è verificato un errore durante l'aggiornamento di page");
+                    await writeErrorLog("getImagesFromWordPress: Si è verificato un errore durante l'aggiornamento di page: "+page);
                     process.exit(1);
                 }                                
             }
             
         } catch (error:any) {
             console.error('getImagesFromWordPress: Error fetching images');
-            await writeErrorLog("getImagesFromWordPress: Error fetching images:"+error.response.data.code);
+            await writeErrorLog("getImagesFromWordPress: Error fetching images:");
+            await writeErrorLog(error);
             process.exit(1);
         }               
     }
@@ -91,8 +93,9 @@ class WordpressApi {
                 resolve();                
             });
     
-            response.data.on('error', async (err: Error) => { 
-                await writeErrorLog("downloadImage:" + err);
+            response.data.on('error', async (err: any) => { 
+                await writeErrorLog("downloadImage:" );
+                await writeErrorLog(err);
                 reject(err);
             });
         }); 
@@ -134,9 +137,9 @@ class WordpressApi {
                 }
             });                        
             return response.data;
-        } catch (error) {            
+        } catch (error:any) {            
             await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:');
-            await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:'+ error);
+            await writeErrorLog(error);
             throw error; // Rilancia l'errore per gestirlo in un punto superiore
         }
     }

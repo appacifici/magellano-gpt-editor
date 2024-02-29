@@ -2,8 +2,6 @@ import { Command } from 'commander';
 import WordpressApi from '../services/WordpressApi';
 import { writeErrorLog } from '../services/Log';
 
-// writeErrorLog('Errore durante il caricamento dell\'immagine:'+ error);
-
 const program = new Command();
 program.version('1.0.0').description('CLI team commander')
     .option('-s, --site <type>', 'Sito da lanciare')

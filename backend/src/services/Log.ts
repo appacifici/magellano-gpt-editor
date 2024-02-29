@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Funzione per scrivere il log di errore su file
-async function writeErrorLog(logError:string): Promise<boolean> {    
+async function writeErrorLog(logError:any): Promise<boolean> {    
     const dataCorrente      = new Date();
     const dataFormattata    = dataCorrente.toISOString().slice(0, 10);
     const cartellaLogs      = path.join(`${process.env.PATH_LOGS}`, '');

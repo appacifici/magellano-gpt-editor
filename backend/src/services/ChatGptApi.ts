@@ -76,9 +76,10 @@ class ChatGptApi {
                     return false;
                 }
             }
-        } catch (error) {         
+        } catch (error:any) {         
             console.error(siteName + ': Errore durante il recupero degli articoli');
-            await writeErrorLog(siteName + '- getArticleBySiteAndGenerate : Errore durante il recupero degli articoli:'+ error);
+            await writeErrorLog(siteName + '- getArticleBySiteAndGenerate : Errore durante il recupero degli articoli:');
+            await writeErrorLog(error);
             return false;
         }
         return true;
@@ -132,7 +133,7 @@ class ChatGptApi {
             }
             return null;
         } catch (error:any) {
-            await writeErrorLog('processArticle: Errore durante l\'elaborazione dell\'articolo:'+ error.error);
+            await writeErrorLog('processArticle: Errore durante l\'elaborazione dell\'articolo:');
             await writeErrorLog(error.error);
             console.error('processArticle: Errore durante l\'elaborazione dell\'articolo');
             return null;
@@ -160,9 +161,10 @@ class ChatGptApi {
                   return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
-        } catch (error) {
+        } catch (error:any) {
             console.error('processTitle: Errore durante l\'elaborazione title:');
-            await writeErrorLog('processTitle: Errore durante l\'elaborazione dell\'articolo:'+ error);
+            await writeErrorLog('processTitle: Errore durante l\'elaborazione dell\'articolo:');
+            await writeErrorLog(error);
             return '';
         }        
     }
@@ -187,9 +189,10 @@ class ChatGptApi {
                   return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
-        } catch (error) {
+        } catch (error:any) {
             console.error('processDescription: Errore durante l\'elaborazione description');
-            await writeErrorLog('processDescription: Errore durante l\'elaborazione dell\'articolo:'+ error);
+            await writeErrorLog('processDescription: Errore durante l\'elaborazione dell\'articolo:');
+            await writeErrorLog(error);
             return '';
         }        
     }
@@ -215,9 +218,10 @@ class ChatGptApi {
                   return this.ucfirst(completion.choices[0].message.content);
             }
             return null;
-        } catch (error) {
+        } catch (error:any) {
             console.error('processH1: Errore durante l\'elaborazione h1');
-            await writeErrorLog('processH1: Errore durante l\'elaborazione dell\'articolo:'+ error);
+            await writeErrorLog('processH1: Errore durante l\'elaborazione dell\'articolo:');
+            await writeErrorLog(error);
             return '';
         }        
     }
@@ -243,9 +247,10 @@ class ChatGptApi {
                   return completion.choices[0].message.content;
             }
             return null;
-        } catch (error) {
+        } catch (error:any) {
             console.error('getCsvKeywords: Errore durante l\'elaborazione h1');
-            await writeErrorLog('getCsvKeywords: Errore durante l\'elaborazione dell\'articolo:'+ error);
+            await writeErrorLog('getCsvKeywords: Errore durante l\'elaborazione dell\'articolo:');
+            await writeErrorLog(error);
             return '';
         }        
     }

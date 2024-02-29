@@ -58,11 +58,12 @@ class BaseApi {
                 };
 
                 Site.updateOne({ url: url }, { $set: updateData })
-                    .then(async (result) => { // Dichiarare la funzione di callback come async
+                    .then(async (result) => { 
                         console.log('Site aggiornato con successo:', url);
                     })
-                    .catch(async (error) => { // Dichiarare la funzione di callback come async
-                        await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:' + error);
+                    .catch(async (error:any) => {
+                        await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:');
+                        await writeErrorLog(error);
                         console.error('Errore durante l\'elaborazione dell\'articolo');
                     });
 
@@ -133,7 +134,8 @@ class BaseApi {
                 success: false,
                 error: `Errore nella richiesta per ${url}: ${errorMessage || error}`
             };
-            await writeErrorLog(`Errore nella richiesta per ${url}: ${errorMessage || error}`);
+            await writeErrorLog(`Errore nella richiesta per ${url}`);
+            await writeErrorLog(errorMessage || error);
             return result;
         }
     }
@@ -178,7 +180,8 @@ class BaseApi {
                 success: false,
                 error: `Errore nella richiesta per ${url}: ${errorMessage || error}`
             };
-            await writeErrorLog(`Errore nella richiesta per ${url}: ${errorMessage || error}`);
+            await writeErrorLog(`Errore nella richiesta per ${url}`);
+            await writeErrorLog(errorMessage || error);
             return result;
         }
     }
@@ -231,7 +234,8 @@ class BaseApi {
             const savedArticle = await newArticle.save();
             console.log('Articolo inserito con successo:', savedArticle);
         } catch (error) {
-            await writeErrorLog(`Errore durante l\'inserimento dell\'articolo ${error}`);
+            await writeErrorLog(`Errore durante l\'inserimento dell\'articolo`);
+            await writeErrorLog(error);
             console.error('Errore durante l\'inserimento dell\'articolo:', error);
         }
     }
