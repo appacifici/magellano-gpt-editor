@@ -13,7 +13,7 @@ import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../..
 import { writeErrorLog } from "../../services/Log";
 
 
-class IlCorriereDellaCitta extends BaseApi {
+class RomaToday extends BaseApi {
     action:string;
 
     constructor(action:string) {
@@ -24,10 +24,10 @@ class IlCorriereDellaCitta extends BaseApi {
 
     async init() {
         switch (this.action) {
-            case 'readSitemap':                
-                await this.readSimpleSitemap('ilcorrieredellacitta.com', this.scrapeWebsite);           
-                
-                break;                
+            case 'readGzSitemap':                                
+            console.log('eccomi');
+                this.readFromListSitemap('romatoday.it', this.scrapeWebsite, this.readGzSitemap);                                    
+                break;
             default:
                 // Logica per altre azioni
                 break;
@@ -36,10 +36,12 @@ class IlCorriereDellaCitta extends BaseApi {
 
     private async scrapeWebsite(url: string): Promise<ScrapedData | null> {
         try {
+            
             // Effettua la richiesta HTTP per ottenere il contenuto della pagina
+            console.log('========>'+url);
             const response          = await axios.get(url);
             const cheerioLoad       = cheerio.load(response.data);    
-            const bodyContainerHTML = cheerioLoad('.dynamic-entry-content').html() || '';    
+            const bodyContainerHTML = cheerioLoad('l-entry__body').html() || '.';    
             const h1Content         = cheerioLoad('h1').text() || '';    
             const metaTitle         = cheerioLoad('title').text();
             const metaDescription   = cheerioLoad('meta[name="description"]').attr('content');
@@ -51,12 +53,12 @@ class IlCorriereDellaCitta extends BaseApi {
                 metaDescription: metaDescription
             };
         } catch (error:any) {
-            await writeErrorLog(`scrapeWebsite: IlCorriereDellaCitta: Errore durante lo scraping della pagina`);
+            await writeErrorLog(`scrapeWebsite: RomaToday.it: Errore durante lo scraping della pagina`);
             await writeErrorLog(error);
-            console.error('scrapeWebsite: IlCorriereDellaCitta.it: Errore durante lo scraping della pagina:', error);
+            console.error('scrapeWebsite: RomaToday.it: Errore durante lo scraping della pagina:', error);
             return null;
         }
     }
 }
 
-export default IlCorriereDellaCitta;
+export default RomaToday;

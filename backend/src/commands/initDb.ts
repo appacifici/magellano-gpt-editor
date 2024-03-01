@@ -60,6 +60,15 @@ const sitesToInsert:SiteArrayType = [
         format:                 'sitemap',
         categoryPublishSite:    1,
         userPublishSite:        19,
+    },
+    { 
+        site:                   'romatoday.it', 
+        sitePublication:        'roma.cronacalive.it', 
+        url:                    'https://www.romatoday.it/sitemaps/sitemap_news.xml',
+        active:                 1, 
+        format:                 'sitemap',
+        categoryPublishSite:    1,
+        userPublishSite:        19,
     }
 ];
 

@@ -1,6 +1,7 @@
 import { Command }      from 'commander';
 import Vanityfair       from '../siteScrapers/api/Vanityfair';
 import IlCorriereDellaCitta from '../siteScrapers/api/IlCorriereDellaCitta';
+import RomaToday from '../siteScrapers/api/RomaToday';
 
 const program = new Command();
 program.version('1.0.0').description('CLI team commander') 
@@ -13,6 +14,9 @@ program.version('1.0.0').description('CLI team commander')
             break;
             case 'ilcorrieredellacitta.com':                       
                 new IlCorriereDellaCitta(options.action);                
+            break;
+            case 'romatoday.it':                       
+                new RomaToday(options.action);                
             break;
         }
     });

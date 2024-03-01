@@ -2,13 +2,16 @@ import connectMongoDB from "../../database/mongodb/connect";
 import Site, { SiteArrayWithIdType, SiteWithIdType } from "../../database/mongodb/models/Site";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import cheerio from 'cheerio';
+import * as fs                              from 'fs';
 import { ReadSitemapSingleNodeResponse, ReadSitemapResponse, UrlNode } from "../interface/SitemapInterface";
 import { ScrapedData } from "../interface/VanityfairInterface";
 import Article, { ArticleType, ArticleWithIdType } from "../../database/mongodb/models/Article";
 import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 import { writeErrorLog } from "../../services/Log";
+import { download, extractGzip, readFileToServer } from "../../services/File";
 
-type ScrapeWebsiteFunction = (url: string) => Promise<ScrapedData | null>;
+type ScrapeWebsiteFunction  = (url: string) => Promise<ScrapedData | null>;
+type ReadSitemapFunction    = (url: string) => Promise<ReadSitemapResponse|null>;
 
 
 class BaseApi {
@@ -33,8 +36,9 @@ class BaseApi {
     }
 
     //Legge una sitemap che contiene la lista di tutte le sotto sitemap 
-    protected async readFromListSitemap(siteName: string, scrapeWebsite: ScrapeWebsiteFunction) {
+    protected async readFromListSitemap(siteName: string, scrapeWebsite: ScrapeWebsiteFunction, readSitemapFunction:ReadSitemapFunction) {        
         const results: SiteArrayWithIdType = await this.getSitemapBySite(siteName);
+        
         results.forEach(async (result: SiteWithIdType) => {
             const sitePublication: SitePublicationWithIdType | null = await this.getSitePublication(result.sitePublication);
 
@@ -68,8 +72,9 @@ class BaseApi {
                     });
 
 
-                const sitemapDetail: ReadSitemapResponse = await this.readSitemapFromUrl(loc);
-                if (sitemapDetail.data) {
+                const sitemapDetail: ReadSitemapResponse|null = await readSitemapFunction(loc);
+                if (sitemapDetail!= null && sitemapDetail.data) {
+                    console.log('ssssssssi');
                     this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);
                 }
             }
@@ -86,10 +91,10 @@ class BaseApi {
         const promises = results.map(async (result: SiteWithIdType) => {
             const sitePublication: SitePublicationWithIdType | null = await this.getSitePublication(result.sitePublication);
             const url = result.url;
-            const sitemapDetail: ReadSitemapResponse = await this.readSitemapFromUrl(url);
+            const sitemapDetail: ReadSitemapResponse|null = await this.readSitemapFromUrl(url);
 
             console.log(sitemapDetail);
-            if (sitemapDetail.data && sitePublication !== null) {
+            if (sitemapDetail != null && sitemapDetail.data && sitePublication !== null) {
                 await this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);
             }
         });
@@ -98,7 +103,6 @@ class BaseApi {
 
         process.exit(5); // Uscire dopo il completamento di tutte le operazioni
     }
-
 
 
     //Prende solo il primo nodo di una sitemap
@@ -141,11 +145,28 @@ class BaseApi {
     }
 
     //Prende n elementi di una sitemap
-    private async readSitemapFromUrl(url: string): Promise<ReadSitemapResponse> {
+    protected async readSitemapFromUrl(url: string): Promise<ReadSitemapResponse|null> {
         try {
             const response = await axios.get(url);
             const xmlData = response.data;
 
+            return BaseApi.readSitemapXML(xmlData);
+
+        } catch (error) {
+            const errorMessage: string = (error as AxiosError).message || 'Errore sconosciuto';
+            const result: ReadSitemapResponse = {
+                success: false,
+                error: `readSitemapFromUrl: Errore nella richiesta per ${url}: ${errorMessage || error}`
+            };
+            await writeErrorLog(`readSitemapFromUrl: Errore nella richiesta per ${url}`);
+            await writeErrorLog(errorMessage || error);
+            return result;
+        }
+    }
+
+    static async readSitemapXML(xmlData: string): Promise<ReadSitemapResponse|null> {
+        try {
+            
             // Carica il documento XML utilizzando cheerio
             const node = cheerio.load(xmlData, { xmlMode: true });
 
@@ -174,24 +195,37 @@ class BaseApi {
 
             return result;
 
-        } catch (error) {
-            const errorMessage: string = (error as AxiosError).message || 'Errore sconosciuto';
-            const result: ReadSitemapResponse = {
-                success: false,
-                error: `Errore nella richiesta per ${url}: ${errorMessage || error}`
-            };
-            await writeErrorLog(`Errore nella richiesta per ${url}`);
-            await writeErrorLog(errorMessage || error);
-            return result;
+        } catch (error) {            
+            await writeErrorLog(`readSitemapXML: Errore lettura xml`);
+            await writeErrorLog( error);      
+            return null;      
         }
     }
 
+    /**
+     * Legge una sitemap in formato .gz url
+     */
+    protected async readGzSitemap(url: string): Promise<ReadSitemapResponse|null> {
+        console.log(url);
+
+        const min:number       = 1;
+        const max:number       = 100;
+        const random:number    = Math.floor(Math.random() * (max - min + 1)) + min;
+        const pathSave:string  = `${process.env.PATH_DOWNALOAD}${random}.gz`;
+        const pathXml:string   = pathSave.replace('.gz','.xml');
+        await download(url, pathSave);    
+        await extractGzip(pathSave, pathXml);    
+        const dataXML = await readFileToServer(pathXml);
 
 
-    public async insertOriginalArticle(site: SiteWithIdType, sitePublication: SitePublicationWithIdType, sitemapDetail: ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {
-        console.log('sitemapDetail');
-        if (sitemapDetail.data) {
-            for (const urlNode of sitemapDetail.data) {
+        const dataXml:ReadSitemapResponse|null   = await BaseApi.readSitemapXML(dataXML);        
+        return dataXml;        
+    }
+
+    public async insertOriginalArticle(site: SiteWithIdType, sitePublication: SitePublicationWithIdType, sitemapDetail: ReadSitemapResponse, scrapeWebsite: ScrapeWebsiteFunction) {        
+
+        if (sitemapDetail.data) {            
+            for (const urlNode of sitemapDetail.data) {                
                 const existArticle = await this.getArticleByUrl(urlNode.loc);
                 if (existArticle === null) {
                     const loc = urlNode.loc;

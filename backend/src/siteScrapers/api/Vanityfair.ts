@@ -18,7 +18,7 @@ class Vanityfair extends BaseApi {
         super();        
         switch( action ) {
             case 'readSitemap':
-                this.readFromListSitemap('vanityfair.it', this.scrapeWebsite);
+                this.readFromListSitemap('vanityfair.it', this.scrapeWebsite, this.readSitemapFromUrl);
                 process.exit(1);
             break;            
         }
