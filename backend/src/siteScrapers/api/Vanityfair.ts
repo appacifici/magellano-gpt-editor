@@ -14,13 +14,19 @@ import { writeErrorLog } from "../../services/Log";
 
 
 class Vanityfair extends BaseApi {
+    action:string;
+
     constructor(action:string) {
         super();        
-        switch( action ) {
+        this.action = action;
+        this.init();       
+    }
+
+    async init() {
+        switch (this.action) {
             case 'readSitemap':
-                this.readFromListSitemap('vanityfair.it', this.scrapeWebsite, this.readSitemapFromUrl);
-                process.exit(1);
-            break;            
+                await this.readFromListSitemap('vanityfair.it', this.scrapeWebsite, this.readSitemapFromUrl);                
+            break;
         }
     }
 

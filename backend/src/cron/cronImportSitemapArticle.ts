@@ -7,7 +7,6 @@ const job = new CronJob(
 	function () {		
         // new Vanityfair('readSitemap');        
         new IlCorriereDellaCitta('readSitemap');      
-		process.exit(1);   
 	}, // onTick
 	null, // onComplete
 	true, // start

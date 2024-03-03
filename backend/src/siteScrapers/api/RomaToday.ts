@@ -26,7 +26,7 @@ class RomaToday extends BaseApi {
         switch (this.action) {
             case 'readGzSitemap':                                
             console.log('eccomi');
-                this.readFromListSitemap('romatoday.it', this.scrapeWebsite, this.readGzSitemap);                                    
+                await this.readFromListSitemap('romatoday.it', this.scrapeWebsite, this.readGzSitemap);                                    
                 break;
             default:
                 // Logica per altre azioni
