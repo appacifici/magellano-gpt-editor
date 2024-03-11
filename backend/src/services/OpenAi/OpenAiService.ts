@@ -6,7 +6,9 @@ import SitePublication, { SitePublicationWithIdType }       from '../../database
 import PromptAi, { PromptAiArrayType, PromptAiWithIdType }  from "../../database/mongodb/models/PromptAi";
 import connectMongoDB                                       from "../../database/mongodb/connect";
 import { ChatCompletionCreateParamsNonStreaming, ChatCompletionUserMessageParam}            from 'openai/resources';
-import { PromptAICallInterface, PromptAiCallsInterface, TYPE_IN_JSON, TYPE_READ_TO_FIELD }    from './Interface/OpenAiInterface';
+import { PromptAICallInterface, PromptAiCallsInterface, StructureChapter, StructureChaptersData, TYPE_IN_JSON, TYPE_READ_STRUCTURE_FIELD }    from './Interface/OpenAiInterface';
+import Site, { SiteWithIdType } from '../../database/mongodb/models/Site';
+import Article, { ArticleWithIdType } from '../../database/mongodb/models/Article';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -21,50 +23,57 @@ class OpenAiService {
         connectMongoDB();
     }
 
-    public async getInfoPromptAi(siteName: string, title:string): Promise<boolean> {
+    public async getInfoPromptAi(siteName: string, generateValue: number): Promise<boolean> {
         try {
-            //Recupera il sito su cui pubblicare
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
+            const article:ArticleWithIdType | null  = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
+            const text:string|undefined             = article?.body;
+            
+            //Recupera il sito su cui pubblicare
+            
+            
 
             //Recupera la logina di generazione in base al sito su cui pubblicare
             const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName});           
 
-            if(promptAi != null) {
-
+            if(promptAi != null && text != undefined ) {                
                 //Recupero la chiamata da fare definita nel db promptAi
                 const call:PromptAICallInterface|null                       = this.getCurrentCall(promptAi);
                 
                 if( call != null ) {
                     const updateCalls:PromptAiCallsInterface                = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;                    
-
+                    
                     //Recupero i dati params per lo step corrente
                     const step:ChatCompletionCreateParamsNonStreaming|null  = this.getCurrentStep(promptAi,call.key);                    
-                    
+                    console.log(step);
                     if( step != null ) {                        
-                        const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,title);
-
-                        const response: string | null | null                        = await this.runChatCompletitions(jsonChatCompletation);
-                        if( response !== null ) {
-                            //Aggiorna il campo calls e il campo data del PromptAiSchema
-                            const field:string = call.saveTo;
+                        
+                        const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,text);
+                        console.log(article?.title);
+                        // const response: string | null | null                        = await this.runChatCompletitions(jsonChatCompletation);
+                        // if( response !== null ) {
+                        //     //Aggiorna il campo calls e il campo data del PromptAiSchema
+                        //     const field:string = call.saveTo;
                             
-                            //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
-                            const dataSave:Object = this.createDataSave(response, promptAi, call);
+                        //     //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
+                        //     const dataSave:Object = this.createDataSave(response, promptAi, call);
 
-                            const filter = { sitePublication: siteName };
-                            const update = { [field] : dataSave, calls: updateCalls };
-                            await PromptAi.findOneAndUpdate(filter, update);
+                        //     const filter = { sitePublication: siteName };
+                        //     const update = { [field] : dataSave, calls: updateCalls };
+                        //     await PromptAi.findOneAndUpdate(filter, update);
                             
-                        } else {
-                            console.log('Nessun risposta PromptAI');
-                        }                        
+                        // } else {
+                        //     console.log('Nessun risposta PromptAI');
+                        // }                        
+                    } else {
+                        console.log('Nessuno step trovato PromptAI');
                     }
                 }
             } else {
                 console.log('Nessun PromptAI');
             }                                      
         } catch (error:any) {         
-            console.error(title + ': Errore durante il recupero degli articoli',error);            
+            console.error( 'Errore durante il recupero degli articoli',error);            
             return false;
         }
         return true;
@@ -81,8 +90,8 @@ class OpenAiService {
                 if( call.msgUser.user !== undefined ) {
                     for (const userMsg of call.msgUser.user) {
                         const placeholder:string    = '[plachehorderContent]';
-                        let msg:string              = userMsg.message.replace(/\\"/g, '\\"');
-                        msg                         = msg.replace(placeholder, title);
+                        title                       = title.replace(/\\"/g, '\\"');
+                        const msg:string            = title.replace(placeholder, title);
                         let chatMessage:ChatCompletionUserMessageParam = {
                             role:    'user', 
                             content: msg
@@ -93,7 +102,7 @@ class OpenAiService {
                     console.log('appendUserMessage: Manca il campo call.msgUser.user');
                 }         
             break;
-            case TYPE_READ_TO_FIELD:
+            case TYPE_READ_STRUCTURE_FIELD:
                 if( call.msgUser.field !== undefined ) {
                     call.msgUser.key
                     console.log("step");
@@ -102,11 +111,33 @@ class OpenAiService {
                     console.log(call);
                     console.log("promptAi");
                     const chiave = call.msgUser.field.toString();
-                    const data = (promptAi as any)[chiave];
+                    const data:StructureChaptersData = (promptAi as any)[chiave];                    
+                    this.readStructureField(data);
                 }
             break;
         }        
         return step;
+    }
+
+    private readStructureField(data:StructureChaptersData) {
+        console.log("data");
+        console.log(data[0].getStructure.chapters);
+        let firstChapter:StructureChapter|null = null;
+        for (const item of data) {
+            const chapters = item.getStructure.chapters;
+            for (const chapter of chapters) {
+                if (chapter.toGenerate === 'true') {
+                    firstChapter = chapter;
+                    break;
+                }
+            }
+            
+        }
+          
+        if( firstChapter !== null ) {
+            console.log(firstChapter);
+        }
+
     }
 
     private createDataSave(response: string, promptAi: PromptAiWithIdType, call: PromptAICallInterface): Object {
@@ -270,8 +301,8 @@ class OpenAiService {
     // }
 }
 
-const c = new OpenAiService();
-c.getInfoPromptAi('acquistigiusti.it', 'Come scegliere un cardiofrequenzimetro');
+// const c = new OpenAiService();
+// c.getInfoPromptAi('acquistigiusti.it', 'Come scegliere un cardiofrequenzimetro');
 
 export default OpenAiService;
 

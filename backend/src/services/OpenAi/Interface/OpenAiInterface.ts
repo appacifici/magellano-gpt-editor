@@ -1,5 +1,5 @@
 const TYPE_IN_JSON:string       = 'inJson';
-const TYPE_READ_TO_FIELD:string = 'readToField';
+const TYPE_READ_STRUCTURE_FIELD:string = 'readStructureField';
 
 interface ChatMessageArray {
     messages:       ChatMessage[];
@@ -31,7 +31,20 @@ interface PromptAICallInterface {
     complete:   number;
 }
 
+interface StructureChapter {
+    toGenerate: string;
+    type:       string;
+    value:      string;
+}
+  
+interface StructureChaptersData extends Array<{
+    getStructure: {
+        chapters: StructureChapter[];
+    }
+  }> {}
+  
+
 type PromptAiCallsInterface = PromptAICallInterface[];
 
 export type {PromptAiCallsInterface};
-export {PromptAICallInterface,ChatMessage,ChatMessageArray, TYPE_IN_JSON, TYPE_READ_TO_FIELD};
+export {PromptAICallInterface,ChatMessage,ChatMessageArray, StructureChapter, StructureChaptersData, TYPE_IN_JSON, TYPE_READ_STRUCTURE_FIELD};
