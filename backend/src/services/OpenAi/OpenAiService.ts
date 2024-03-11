@@ -2,13 +2,14 @@
 import dotenv                                               from 'dotenv';
 import OpenAI                                               from "openai";
 import MarkdownIt                                           from 'markdown-it';
+import cheerio                                              from 'cheerio';
 import SitePublication, { SitePublicationWithIdType }       from '../../database/mongodb/models/SitePublication';
 import PromptAi, { PromptAiArrayType, PromptAiWithIdType }  from "../../database/mongodb/models/PromptAi";
 import connectMongoDB                                       from "../../database/mongodb/connect";
 import { ChatCompletionCreateParamsNonStreaming, ChatCompletionUserMessageParam}            from 'openai/resources';
-import { PromptAICallInterface, PromptAiCallsInterface, StructureChapter, StructureChaptersData, TYPE_IN_JSON, TYPE_READ_STRUCTURE_FIELD }    from './Interface/OpenAiInterface';
-import Site, { SiteWithIdType } from '../../database/mongodb/models/Site';
-import Article, { ArticleWithIdType } from '../../database/mongodb/models/Article';
+import { ACTION_CREATE_DATA_SAVE, ACTION_UPDATE_SCHEMA_ARTICLE, PromptAICallInterface, PromptAiCallsInterface, StructureChapter, StructureChaptersData, TYPE_IN_JSON, TYPE_READ_STRUCTURE_FIELD }    from './Interface/OpenAiInterface';
+import Site, { SiteWithIdType }                             from '../../database/mongodb/models/Site';
+import Article, { ArticleWithIdType }                       from '../../database/mongodb/models/Article';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -26,17 +27,13 @@ class OpenAiService {
     public async getInfoPromptAi(siteName: string, generateValue: number): Promise<boolean> {
         try {
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
-            const article:ArticleWithIdType | null  = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
-            const text:string|undefined             = article?.body;
-            
-            //Recupera il sito su cui pubblicare
-            
-            
+            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
+            const text:string|undefined                                     = article?.body;
 
             //Recupera la logina di generazione in base al sito su cui pubblicare
             const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName});           
 
-            if(promptAi != null && text != undefined ) {                
+            if(promptAi !== null && text !== undefined && article !== null ) {                
                 //Recupero la chiamata da fare definita nel db promptAi
                 const call:PromptAICallInterface|null                       = this.getCurrentCall(promptAi);
                 
@@ -47,24 +44,22 @@ class OpenAiService {
                     const step:ChatCompletionCreateParamsNonStreaming|null  = this.getCurrentStep(promptAi,call.key);                    
                     console.log(step);
                     if( step != null ) {                        
-                        
                         const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,text);
                         console.log(article?.title);
-                        // const response: string | null | null                        = await this.runChatCompletitions(jsonChatCompletation);
-                        // if( response !== null ) {
-                        //     //Aggiorna il campo calls e il campo data del PromptAiSchema
-                        //     const field:string = call.saveTo;
+                        const response: string | null | null                              = await this.runChatCompletitions(jsonChatCompletation);
+                        if( response !== null ) {
+                            //Aggiorna il campo calls e il campo data del PromptAiSchema
                             
-                        //     //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
-                        //     const dataSave:Object = this.createDataSave(response, promptAi, call);
-
-                        //     const filter = { sitePublication: siteName };
-                        //     const update = { [field] : dataSave, calls: updateCalls };
-                        //     await PromptAi.findOneAndUpdate(filter, update);
-                            
-                        // } else {
-                        //     console.log('Nessun risposta PromptAI');
-                        // }                        
+                            if( call.saveFunction == ACTION_CREATE_DATA_SAVE ) {
+                                //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
+                                await this.createDataSave(response, promptAi, call, updateCalls, siteName );
+                            } else if( call.saveFunction == ACTION_UPDATE_SCHEMA_ARTICLE ) {
+                                await this.updateSchemaArticle(response, call, article );
+                            }
+                                                        
+                        } else {
+                            console.log('Nessun risposta PromptAI');
+                        }                        
                     } else {
                         console.log('Nessuno step trovato PromptAI');
                     }
@@ -94,7 +89,7 @@ class OpenAiService {
                         const msg:string            = title.replace(placeholder, title);
                         let chatMessage:ChatCompletionUserMessageParam = {
                             role:    'user', 
-                            content: msg
+                            content: this.unifyString(msg)
                         };
                         step.messages.push(chatMessage)
                     }    
@@ -110,16 +105,33 @@ class OpenAiService {
                     console.log("call");
                     console.log(call);
                     console.log("promptAi");
-                    const chiave = call.msgUser.field.toString();
-                    const data:StructureChaptersData = (promptAi as any)[chiave];                    
-                    this.readStructureField(data);
+                    const chiave                        = call.msgUser.field.toString();
+                    const data:StructureChaptersData    = (promptAi as any)[chiave];                    
+                    const chapter:StructureChapter|null = this.readStructureField(data);
+                    if( chapter !== null ) {
+                        let message                     = call.msgUser.message;
+                        const placeholder:string        = '[plachehorderContent]';
+                        message                         = message.replace(/\\"/g, '\\"');
+                        message                         = message.replace(placeholder, chapter.value);
+
+                        let chatMessage:ChatCompletionUserMessageParam = {
+                            role:    'user', 
+                            content: '"""'+this.unifyString(this.removeHtmlTags(title))+'""". '+message
+                        };
+                        step.messages.push(chatMessage)
+                    }
+                    console.log("step");
+                    console.log(step);
                 }
             break;
         }        
         return step;
     }
 
-    private readStructureField(data:StructureChaptersData) {
+    /**
+     * Lette la struttura 1 definita per generare un articolo
+     */
+    private readStructureField(data:StructureChaptersData):StructureChapter|null {
         console.log("data");
         console.log(data[0].getStructure.chapters);
         let firstChapter:StructureChapter|null = null;
@@ -130,17 +142,34 @@ class OpenAiService {
                     firstChapter = chapter;
                     break;
                 }
-            }
-            
+            }            
         }
           
         if( firstChapter !== null ) {
-            console.log(firstChapter);
+            return firstChapter;
         }
 
+        return null;
     }
 
-    private createDataSave(response: string, promptAi: PromptAiWithIdType, call: PromptAICallInterface): Object {
+    /**
+     * Salva il dato nella tabella Article
+     */
+    private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType) {
+                        
+        const lastArticle:ArticleWithIdType | null                          = await Article.findOne({ _id: article._id });
+        console.log(call);
+        
+        const filter            = { _id: article._id };
+        const update            = { [call.saveTo] : lastArticle?.bodyGpt+' '+response  };
+        console.log("=="+update);
+        await Article.findOneAndUpdate(filter, update);
+    }
+
+    /**
+     * Salva il dato nella tabella promptAI
+     */
+    private async createDataSave(response: string, promptAi: PromptAiWithIdType, call: PromptAICallInterface, updateCalls:PromptAiCallsInterface, siteName:string): Promise<boolean> {
         const field: string = call.saveTo;
         let dataField: any = {}; // Inizializza dataField come un oggetto vuoto
     
@@ -156,7 +185,12 @@ class OpenAiService {
         } else {
             dataField = dataField.map((item:any) => ({ ...item, [call.saveKey]: JSON.parse(response) }));    
         }
-        return dataField;
+        
+        const filter            = { sitePublication: siteName };
+        const update            = { [field] : dataField, calls: updateCalls };
+        await PromptAi.findOneAndUpdate(filter, update);
+        
+        return true;
     }
     
 
@@ -261,44 +295,28 @@ class OpenAiService {
         }
     }
 
+    private unifyString(stringWithNewlines:string):string {
+        const unifiedString = stringWithNewlines.replace(/\n|\r\n|\r/g, '');
+        return unifiedString;
+    }
+
+    private removeHtmlTags(htmlString:string) {
+        // Carica la stringa HTML utilizzando cheerio
+        const $ = cheerio.load(htmlString);
+        
+        // Trova tutti i tag HTML e rimuovili
+        $('*').each((index: any, element: any) => {
+          $(element).replaceWith($(element).text().trim());
+        });
+        
+        // Ritorna la stringa senza tag HTML
+        return $.text().trim();
+      }
+
     public sleep(ms:any) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // public async getArticle(info:string,testGenerate:string): Promise<string | null> {
-    //     try {                          
-    //         if (info) {                                
-    //             const completion = await this.openai.chat.completions.create({                   
-    //                 messages: [                        
-    //                     {
-    //                         role: "system",
-    //                         content: 'Act as: Copywriter. Text type: Buying guide. Explain well in the chapter the items delimited by triple quotes. Min Length chapters: 700 words. Min Length subchapters: 200 words. Formatting: Important words in bold. Writing style: persuasive. Tone: professional. Italian language. Don\'t generate chapters: Conclusions, Objective: write paragraphs regarding a specific topic of a purchasing guide, to help the reader make a purchase. MyStructure: Write chapters with the Markdown format (##). Write: The chapter must have a short introduction.',
-    //                     },                                                
-    //                     {
-    //                         role: "user", 
-    //                         content: info
-    //                     }                        
-    //                 ],
-    //                 model: "gpt-3.5-turbo-1106",
-    //                 temperature: 0.6,
-    //                 top_p: 0.9,
-    //                 // response_format: { "type": "json_object" }
-    //             });
-                  
-    //             let article = this.ucfirst(completion.choices[0].message.content);
-    //             if( article != null ) {
-    //                 article = article.replace(/<img[^>]*>/g, '');
-
-    //             }
-    //             return this.ucfirst(completion.choices[0].message.content);
-                
-    //         }
-    //         return null;
-    //     } catch (error:any) {            
-    //         console.error('processArticle: Errore durante l\'elaborazione dell\'articolo', error);
-    //         return null;
-    //     }
-    // }
 }
 
 // const c = new OpenAiService();
