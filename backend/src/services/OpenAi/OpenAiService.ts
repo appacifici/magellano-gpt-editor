@@ -4,12 +4,21 @@ import OpenAI                                               from "openai";
 import MarkdownIt                                           from 'markdown-it';
 import cheerio                                              from 'cheerio';
 import SitePublication, { SitePublicationWithIdType }       from '../../database/mongodb/models/SitePublication';
-import PromptAi, { PromptAiArrayType, PromptAiWithIdType }  from "../../database/mongodb/models/PromptAi";
+import PromptAi, { PromptAiWithIdType }                     from "../../database/mongodb/models/PromptAi";
 import connectMongoDB                                       from "../../database/mongodb/connect";
-import { ChatCompletionCreateParamsNonStreaming, ChatCompletionUserMessageParam}            from 'openai/resources';
-import { ACTION_CREATE_DATA_SAVE, ACTION_UPDATE_SCHEMA_ARTICLE, PromptAICallInterface, PromptAiCallsInterface, StructureChapter, StructureChaptersData, TYPE_IN_JSON, TYPE_READ_STRUCTURE_FIELD }    from './Interface/OpenAiInterface';
-import Site, { SiteWithIdType }                             from '../../database/mongodb/models/Site';
 import Article, { ArticleWithIdType }                       from '../../database/mongodb/models/Article';
+import { 
+    ChatCompletionCreateParamsNonStreaming, 
+    ChatCompletionUserMessageParam}                         from 'openai/resources';
+import { 
+    ACTION_CREATE_DATA_SAVE, 
+    ACTION_UPDATE_SCHEMA_ARTICLE,
+    TYPE_IN_JSON, 
+    TYPE_READ_STRUCTURE_FIELD, 
+    PromptAICallInterface, 
+    PromptAiCallsInterface, 
+    StructureChapter, 
+    StructureChaptersData }                                 from './Interface/OpenAiInterface';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -54,7 +63,10 @@ class OpenAiService {
                                 //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
                                 await this.createDataSave(response, promptAi, call, updateCalls, siteName );
                             } else if( call.saveFunction == ACTION_UPDATE_SCHEMA_ARTICLE ) {
-                                await this.updateSchemaArticle(response, call, article );
+                                const responseUpdate:boolean = await this.updateSchemaArticle(response, call, article );
+                                if( responseUpdate === true ) {
+                                    //TODO: fare funzione che gestista gli update dei complete degli step interni della struttura
+                                }
                             }
                                                         
                         } else {
@@ -155,15 +167,17 @@ class OpenAiService {
     /**
      * Salva il dato nella tabella Article
      */
-    private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType) {
-                        
-        const lastArticle:ArticleWithIdType | null                          = await Article.findOne({ _id: article._id });
-        console.log(call);
-        
-        const filter            = { _id: article._id };
-        const update            = { [call.saveTo] : lastArticle?.bodyGpt+' '+response  };
-        console.log("=="+update);
-        await Article.findOneAndUpdate(filter, update);
+    private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType): Promise<boolean> {                        
+        const lastArticle:ArticleWithIdType | null  = await Article.findOne({ _id: article._id });        
+        const filter                                = { _id: article._id };
+        const update                                = {[call.saveTo] : lastArticle?.bodyGpt+' '+response};
+
+        return await Article.findOneAndUpdate(filter, update).then(result => {
+            return true;
+        }).catch(error => {            
+            console.error(`Si è verificato un errore durante la ricerca dell'articolo: ${error}`);
+            return false;
+        });
     }
 
     /**
