@@ -2,6 +2,7 @@ const TYPE_IN_JSON:string                       = 'inJson';
 const TYPE_READ_STRUCTURE_FIELD:string          = 'readStructureField';
 const ACTION_CREATE_DATA_SAVE:string            = 'createDataSave';
 const ACTION_UPDATE_SCHEMA_ARTICLE:string       = 'updateSchemaArticle';
+const ACTION_WRITE_BODY_ARTICLE:string          = 'writeBodyArticle';
 
 interface ChatMessageArray {
     messages:       ChatMessage[];
@@ -60,5 +61,6 @@ export {
     TYPE_IN_JSON, 
     TYPE_READ_STRUCTURE_FIELD,
     ACTION_CREATE_DATA_SAVE,
-    ACTION_UPDATE_SCHEMA_ARTICLE
+    ACTION_UPDATE_SCHEMA_ARTICLE,
+    ACTION_WRITE_BODY_ARTICLE
 };

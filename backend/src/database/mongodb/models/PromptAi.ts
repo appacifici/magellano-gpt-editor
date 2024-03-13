@@ -52,7 +52,7 @@ const PromptAiSchema = new Schema({
     }   
 });
 
-PromptAiSchema.index({ PromptAiLink: 1, PromptAiID:1 }, { unique: true });
+// PromptAiSchema.index({ PromptAiLink: 1, PromptAiID:1 }, { unique: true });
 
 
 const PromptAi:Model<IPromptAi> = mongoose.models.PromptAi || mongoose.model('PromptAi', PromptAiSchema);

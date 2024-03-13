@@ -18,7 +18,9 @@ import {
     PromptAICallInterface, 
     PromptAiCallsInterface, 
     StructureChapter, 
-    StructureChaptersData }                                 from './Interface/OpenAiInterface';
+    StructureChaptersData, 
+    ACTION_WRITE_BODY_ARTICLE}                                 from './Interface/OpenAiInterface';
+import { Console } from 'console';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -40,7 +42,7 @@ class OpenAiService {
             const text:string|undefined                                     = article?.body;
 
             //Recupera la logina di generazione in base al sito su cui pubblicare
-            const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName});           
+            const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName, _id: '65f2283df5b650d7ce077f0a'});           
 
             if(promptAi !== null && text !== undefined && article !== null ) {                
                 //Recupero la chiamata da fare definita nel db promptAi
@@ -63,12 +65,15 @@ class OpenAiService {
                             if( call.saveFunction == ACTION_CREATE_DATA_SAVE ) {
                                 //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
                                 await this.createDataSave(response, promptAi, call, updateCalls, siteName );
+                            } else if( call.saveFunction == ACTION_WRITE_BODY_ARTICLE ) {
+                                
+
                             } else if( call.saveFunction == ACTION_UPDATE_SCHEMA_ARTICLE ) {
                                 //Recupero il capitolo corrente gestisto
                                 const chiave                                            = call.msgUser.field.toString();
                                 const data:StructureChaptersData                        = (promptAi as any)[chiave];                    
                                 const structureChapter:StructureChapter|null            = this.readStructureField(data);
-                                const structureChaptersData:StructureChaptersData|null  = this.setStructureFieldChapterGenerate(data,'false');            
+                                const structureChaptersData:StructureChaptersData|null  = this.setStructureFieldChapterGenerate(data,'false');                                         
                                 await PromptAi.findByIdAndUpdate(promptAi._id, { data: structureChaptersData });
 
                                 const checkIfLastChapter:boolean                        = this.checkIfLastChapter(structureChaptersData,'false');                                          
@@ -87,6 +92,7 @@ class OpenAiService {
                                             const result = await Article.findOneAndUpdate(filter, update);
                                         
                                             // Se l'aggiornamento di 'Article' ha avuto successo, aggiorna 'PromptAi'
+                                            //TODO: questa parte deve essere centralizzata perchè la deve chiamare anche il case sopra
                                             if (result) {
                                                 // Setta la calls a complete in 'PromptAi'
                                                 const updateCalls:PromptAiCallsInterface = this.setAllCallUncompliete(promptAi) as PromptAiCallsInterface; 
@@ -281,7 +287,7 @@ class OpenAiService {
             dataField = dataField.map((item:any) => ({ ...item, [call.saveKey]: JSON.parse(response) }));    
         }
         
-        const filter            = { sitePublication: siteName };
+        const filter            = { _id: promptAi._id };
         const update            = { [field] : dataField, calls: updateCalls };
         await PromptAi.findOneAndUpdate(filter, update);
         
