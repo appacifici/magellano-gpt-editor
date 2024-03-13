@@ -47,6 +47,7 @@ class OpenAiService {
                 const call:PromptAICallInterface|null                       = this.getCurrentCall(promptAi);
                 
                 if( call != null ) {
+                    //Crea il json della call corrente con il campo complete ad 1 per il successivo salvataggio
                     const updateCalls:PromptAiCallsInterface                = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;                    
                     
                     //Recupero i dati params per lo step corrente
@@ -63,10 +64,53 @@ class OpenAiService {
                                 //Genera il dato da salvare in base ai parametri settati nelle calls del PromptAI
                                 await this.createDataSave(response, promptAi, call, updateCalls, siteName );
                             } else if( call.saveFunction == ACTION_UPDATE_SCHEMA_ARTICLE ) {
-                                const responseUpdate:boolean = await this.updateSchemaArticle(response, call, article );
-                                if( responseUpdate === true ) {
-                                    //TODO: fare funzione che gestista gli update dei complete degli step interni della struttura
-                                }
+                                //Recupero il capitolo corrente gestisto
+                                const chiave                                            = call.msgUser.field.toString();
+                                const data:StructureChaptersData                        = (promptAi as any)[chiave];                    
+                                const structureChapter:StructureChapter|null            = this.readStructureField(data);
+                                const structureChaptersData:StructureChaptersData|null  = this.setStructureFieldChapterGenerate(data,'false');            
+                                await PromptAi.findByIdAndUpdate(promptAi._id, { data: structureChaptersData });
+
+                                const checkIfLastChapter:boolean                        = this.checkIfLastChapter(structureChaptersData,'false');                                          
+                                const chapterArticle:string = `<${structureChapter?.type}>${structureChapter?.value}</${structureChapter?.type}>${response}`;
+
+                                const responseUpdate:boolean = await this.updateSchemaArticle(chapterArticle, call, article );
+                                if( responseUpdate === true && checkIfLastChapter === true ) {                                     
+                                    //Deve essere fatto solo quando è alla generazione dell'ultimo capitolo
+                                    
+                                    console.log(structureChaptersData[0].getStructure.chapters);
+                                    try {                                                                                
+                                        
+                                        const update = {genarateGpt:1};
+                                        const filter = { _id: article._id };
+                                        try {
+                                            const result = await Article.findOneAndUpdate(filter, update);
+                                        
+                                            // Se l'aggiornamento di 'Article' ha avuto successo, aggiorna 'PromptAi'
+                                            if (result) {
+                                                // Setta la calls a complete in 'PromptAi'
+                                                const updateCalls:PromptAiCallsInterface = this.setAllCallUncompliete(promptAi) as PromptAiCallsInterface; 
+                                                const filterPromptAi = { _id: promptAi._id };
+                                                const updatePromptAi = { calls: updateCalls, data : [{}] };
+                                        
+                                                await PromptAi.findOneAndUpdate(filterPromptAi, updatePromptAi);
+                                            } else {
+                                                console.error('Nessun articolo trovato o aggiornato.');
+                                                return false;
+                                            }
+                                        } catch (error) {
+                                            console.error(`Si è verificato un errore durante la ricerca e l'aggiornamento dell'articolo: ${error}`);
+                                            return false;
+                                        }
+                                        
+                                    
+                                        console.log('Aggiornamento completato con successo.');
+                                    } catch (error) {
+                                        console.error('Si è verificato un errore durante l\'aggiornamento:', error);
+                                    } 
+
+                                    
+                                }                                
                             }
                                                         
                         } else {
@@ -141,7 +185,7 @@ class OpenAiService {
     }
 
     /**
-     * Lette la struttura 1 definita per generare un articolo
+     * Legge la struttura 1 definita per generare un articolo
      */
     private readStructureField(data:StructureChaptersData):StructureChapter|null {
         console.log("data");
@@ -163,6 +207,43 @@ class OpenAiService {
 
         return null;
     }
+
+    /**
+     * Setta toGenerate a true per il capitolo appena generato 
+     */
+    private setStructureFieldChapterGenerate(data: StructureChaptersData, toGenerate: string): StructureChaptersData {
+        console.log("data");
+        console.log(data[0].getStructure.chapters);
+        
+        for (const item of data) {
+            const chapters = item.getStructure.chapters;
+            for (const chapter of chapters) {
+                if (chapter.toGenerate === 'true') {
+                    chapter.toGenerate = toGenerate;
+                    break;
+                }
+            }            
+        }
+        return data;
+    }
+
+    /**
+     * Determina se è l'ultimo capitolo da generate 
+     */
+    private checkIfLastChapter(data: StructureChaptersData, toGenerate: string): boolean {        
+        let checkLast = true;        
+        for (const item of data) {
+            const chapters = item.getStructure.chapters;
+            for (const chapter of chapters) {
+                if (chapter.toGenerate === 'true') {
+                    checkLast = false;
+                    break;
+                }
+            }            
+        }
+        return checkLast;
+    }
+    
 
     /**
      * Salva il dato nella tabella Article
@@ -224,7 +305,7 @@ class OpenAiService {
     }
 
      /**
-     * Recupera la chiamata che deve essere effettuata da inviare a OpenAi     
+     * Setta il complete della call ad 1     
      */
      public setCompleteCall(promptAi: PromptAiWithIdType,key:string): PromptAiCallsInterface | null {
         const calls: PromptAiCallsInterface = promptAi.calls as PromptAiCallsInterface;        
@@ -234,6 +315,19 @@ class OpenAiService {
             if (call.key === key) { // Assumo che `complete` sia 0 per le chiamate non completate
                 call.complete = 1;
             }
+        }
+        return calls;
+    }
+
+    /**
+     * Effettua il reset di tutti i complete delle calls per poter lavorare con il nuovo articolo     
+     */
+    public setAllCallUncompliete(promptAi: PromptAiWithIdType): PromptAiCallsInterface | null {
+        const calls: PromptAiCallsInterface = promptAi.calls as PromptAiCallsInterface;        
+
+        for (let i = 0; i < calls.length; i++) {
+            const call = calls[i];            
+            call.complete = 0;            
         }
         return calls;
     }
