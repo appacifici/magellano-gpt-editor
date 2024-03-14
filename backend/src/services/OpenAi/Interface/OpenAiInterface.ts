@@ -1,8 +1,9 @@
 const TYPE_IN_JSON:string                       = 'inJson';
 const TYPE_READ_STRUCTURE_FIELD:string          = 'readStructureField';
-const ACTION_CREATE_DATA_SAVE:string            = 'createDataSave';
-const ACTION_UPDATE_SCHEMA_ARTICLE:string       = 'updateSchemaArticle';
-const ACTION_WRITE_BODY_ARTICLE:string          = 'writeBodyArticle';
+const ACTION_CREATE_DATA_SAVE:string            = 'createDataSave'; //salvataggio in campo data promptAi
+const ACTION_UPDATE_SCHEMA_ARTICLE:string       = 'updateSchemaArticle'; //Salvataggio chapters
+const ACTION_WRITE_BODY_ARTICLE:string          = 'writeBodyArticle'; //Salvataggio articolo in 1 step
+const ACTION_WRITE_TOTAL_ARTICLE:string         = 'writeTotalArticle'; //Salvataggio articolo completo in 1 step
 
 interface ChatMessageArray {
     messages:       ChatMessage[];
@@ -62,5 +63,6 @@ export {
     TYPE_READ_STRUCTURE_FIELD,
     ACTION_CREATE_DATA_SAVE,
     ACTION_UPDATE_SCHEMA_ARTICLE,
-    ACTION_WRITE_BODY_ARTICLE
+    ACTION_WRITE_BODY_ARTICLE,
+    ACTION_WRITE_TOTAL_ARTICLE
 };

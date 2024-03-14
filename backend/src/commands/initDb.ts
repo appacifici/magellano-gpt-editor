@@ -53,8 +53,33 @@ const promptAiToInsert:PromptAiArrayType = [
         numStep:            1,  
         complete:           0,
         typePrompt:         1
+    },
+    {   sitePublication:    'roma.cronacalive.it', 
+        calls:              [{"key":"getArticle","saveFunction":"writeBodyArticle","saveTo":"bodyGpt","saveKey":"","complete":0,"msgUser":{"type":"inJson","user":[{"message":"<article>[plachehorderContent]</article>"}]}}],
+        steps:              [{"getArticle":{"messages":[{"role":"system","content":"Ruolo: Sei un utile giornalista professinista. Obiettivo: Riscrivi un articolo. Stile di scrittura: professionale. Tono: professionale. Lingua: italiano. Lunghezza 500 parole. Struttura: {\"H1\":{\"content\":\"Introduzione di 100 parole\"},\"H2\":[{\"content\":\"Testo H2 1 (max 100 parole)\"},{\"content\":\"Testo H2 2 (max 100 parole)\"},{\"content\":\"Testo H2 3 (max 100 parole)\"}]}. Ti verrà fornito un articolo (delimitato con tag XML) sullo stesso argomento. Devi scrivere un articolo cambiando più che puoi l'originale"}],"model":"gpt-3.5-turbo-1106","temperature":0.6,"top_p":0.9}}],
+        data:               [],
+        numStep:            1,  
+        complete:           0,
+        typePrompt:         1
+    },
+    {   sitePublication:    'roma.cronacalive.it', 
+        calls:              [{"key":"getArticle","saveFunction":"writeBodyArticle","saveTo":"bodyGpt","saveKey":"","complete":0,"msgUser":{"type":"inJson","user":[{"message":"<article>[plachehorderContent]</article>"}]}}],
+        steps:              [{"getArticle":{"messages":[{"role":"system","content":"Ruolo: Sei un utile giornalista professinista. Obiettivo: Riscrivi un articolo cambiando più che puoi l'originale e apliando il contenuto. Stile di scrittura: professionale. Tono: professionale. Lingua: italiano. Lunghezza: Minimo 500 parole. Struttura:<articolo><h1>Titolo dell'articolo</h1><p minLength=\"50 words\" maxLength=\"100 words\">Sottotitolo dell'articolo</p><h2 minLength=\"50 words\" maxLength=\"150 words\">Primo paragrafo dell'articolo</h2><h2 minLength=\"50 words\" maxLength=\"150 words\">Secondo paragrafo dell'articolo.</h2><h2 minLength=\"50 words\" maxLength=\"150 words\">Terzo paragrafo dell'articolo.</h2></articolo>. Ti verrà fornito un articolo (delimitato con tag XML) sullo stesso argomento."}],"model":"gpt-3.5-turbo-1106","temperature":0.6,"top_p":0.9}}],
+        data:               [],
+        numStep:            1,  
+        complete:           0,
+        typePrompt:         1
+    },
+    {   sitePublication:    'roma.cronacalive.it', 
+        calls:              [{"key":"getArticle","saveFunction":"writeTotalArticle","saveTo":"bodyGpt","saveKey":"","complete":0,"msgUser":{"type":"inJson","user":[{"message":"<article>[plachehorderContent]</article>"}]}}],
+        steps:              [{"getArticle":{"messages":[{"role":"system","content":"Ruolo: Sei un utile giornalista professinista. Obiettivo: Riscrivi un articolo cambiando più che puoi l'originale e apliando il contenuto. Stile di scrittura: professionale. Tono: professionale. Lingua: italiano. Lunghezza: Minimo 500 parole. Struttura:<articolo><meta><metaTitle maxLength=\"80 characters\">Meta title dell'articolo</metaTitle><metaDescription maxLength=\"130 characters\">Meta title dell'articolo</metaDescription></meta><h1>Titolo dell'articolo</h1><p minLength=\"100 words\" maxLength=\"150 words\">Sottotitolo dell'articolo</p><h2 minLength=\"100 words\" maxLength=\"200 words\">Primo paragrafo dell'articolo</h2><h2 minLength=\"100 words\" maxLength=\"200 words\">Secondo paragrafo dell'articolo.</h2><h2 minLength=\"100 words\" maxLength=\"200 words\">Terzo paragrafo dell'articolo.</h2></articolo>. Ti verrà fornito un articolo (delimitato con tag XML) sullo stesso argomento."}],"model":"gpt-3.5-turbo-1106","temperature":0.6,"top_p":0.9}}],
+        data:               [],
+        numStep:            1,  
+        complete:           0,
+        typePrompt:         1
     }
 ];
+
 
 PromptAi.insertMany(promptAiToInsert)
 .then((docs) => {

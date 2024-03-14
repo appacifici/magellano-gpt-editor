@@ -14,7 +14,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'roma.cronacalive.it':   
                 try {
                     // await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    await openAiService.getInfoPromptAi(options.site, 0); // Usa await per attendere il completamento della promessa
+                    await openAiService.getInfoPromptAi(options.site, "65f32f784d49db2d3cb665ae", 0); // Usa await per attendere il completamento della promessa
                     process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);

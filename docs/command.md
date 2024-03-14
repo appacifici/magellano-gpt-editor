@@ -8,7 +8,7 @@ npx ts-node src/commands/initDb.ts
 NODE_ENV=development npx ts-node src/commands/initDb.ts
 NODE_ENV=development npx ts-node src/commands/getWpApi.ts -s roma.cronacalive.it
 NODE_ENV=development npx ts-node src/commands/importSitemapArticle.ts -s ilcorrieredellacitta.com -a readSitemap
-NODE_ENV=development npx ts-node src/commands/generateGptArticle.ts -s ilcorrieredellacitta.com
+NODE_ENV=development npx ts-node src/commands/generateGptArticle.ts -s roma.cronacalive.it
 NODE_ENV=development npx ts-node src/commands/sendToWpApi.ts -s ilcorrieredellacitta.com
 NODE_ENV=development npx ts-node src/services/OpenAi/OpenAiService.ts
 
