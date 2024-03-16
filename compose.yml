@@ -24,8 +24,8 @@ services:
     volumes:
       - ./data:/data/db
     # environment:
-      # MONGO_INITDB_ROOT_USERNAME: 27017
-      # MONGO_INITDB_ROOT_PASSWORD: examplepassword
+    #   MONGO_INITDB_ROOT_USERNAME: openaiuser
+    #   MONGO_INITDB_ROOT_PASSWORD: h98834958fh3405870
     
 
   nodebackendgpt:

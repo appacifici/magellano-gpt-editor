@@ -24,13 +24,14 @@
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2",
     "wpapi": "^1.2.2",
-    "xml2js": "^0.6.2"
+    "xmldom": "^0.6.0"
   },
   "devDependencies": {
     "@types/markdown-it": "^13.0.7",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^20.9.4",
     "@types/wpapi": "^1.1.4",
-    "@types/xml2js": "^0.4.14"
+    "@types/xml2js": "^0.4.14",
+    "@types/xmldom": "^0.1.34"
   }
 }

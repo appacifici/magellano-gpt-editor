@@ -232,6 +232,7 @@ class ChatGptApi {
             if (title) {
                 const completion = await this.openai.chat.completions.create({
                     messages: [                      
+                        // {"role": "system", "content": "Ruolo: Sei un esperto di keyword. Scopo: Generare la lista di keywords (massimo 1 parola) presenti in un titolo. Peso Nomi e cognomi di persona:100, Pero nomi città:50, Peso altre parole: determina tu il giusto peso tra 5 e 30. Struttura: [{ keyword: string, peso: int },{ keyword: string, peso: int }]   "}
                         {"role": "user", "content": title},       
                         {"role": "user", "content": `Crea un json con la lista di keywords da massimo 1 parola, aggiungi il peso che hanno nella ricerca`},                                                
                         {"role": "user", "content": `Rispondimi solo con un json in questo formato:[

@@ -165,26 +165,29 @@ class WordpressApi {
                 await writeErrorLog("sendToWPApi sitePublication === null || article === null || article.titleGpt === undefined" );
                 return false;
             }
-    
+                
+
             const chatGptApi = new ChatGptApi();
             let textString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
+            console.log(article.titleGpt);
+            
             if (textString == null) {
                 console.error(textString);
                 await writeErrorLog("sendToWPApi textString === null");
                 return false;
             }
-
+            
             const regex = /\[[^\]]*\]/;
             const jsonString = textString.match(regex);
             if (jsonString == null) {
                 await writeErrorLog("sendToWPApi jsonString === null");
                 console.error(jsonString);
                 return false;
-            }
+            }                        
 
             let results: any = [];
             results = JSON.parse(jsonString[0]);            
-            console.log(results);
+            console.log(results);            
     
             let imageWP = await findImageByWords(results, sitePublication._id);            
     
@@ -248,8 +251,9 @@ class WordpressApi {
                 console.log('sendToWPApi: '+siteName + ': Set send 1 avvenuta con successo');
             }
         } catch (error) {            
-            console.log('sendToWPApi: '+siteName + ': Errore durante l\'operazione:');
+            console.log(error);
             await writeErrorLog('sendToWPApi: '+siteName + ': Errore durante l\'operazione:');
+            await writeErrorLog(error);
             return false;
         }
         return true;

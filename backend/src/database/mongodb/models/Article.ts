@@ -16,6 +16,7 @@ type ArticleType = {
     genarateGpt:        number;   
     categoryPublishSite:Number;   
     userPublishSite:    Number;   
+    [key: string]:      any;
 }
 
 interface IArticle extends Document, Omit<ArticleType, '_id'> {}

@@ -3,7 +3,8 @@ import dotenv                                               from 'dotenv';
 import OpenAI                                               from "openai";
 import MarkdownIt                                           from 'markdown-it';
 import cheerio                                              from 'cheerio';
-import xml2js from 'xml2js';
+import { DOMParser }                                        from 'xmldom';
+
 import SitePublication, { SitePublicationWithIdType }       from '../../database/mongodb/models/SitePublication';
 import PromptAi, { PromptAiWithIdType }                     from "../../database/mongodb/models/PromptAi";
 import connectMongoDB                                       from "../../database/mongodb/connect";
@@ -16,13 +17,18 @@ import {
     ACTION_UPDATE_SCHEMA_ARTICLE,
     TYPE_IN_JSON, 
     TYPE_READ_STRUCTURE_FIELD, 
+    TYPE_READ_FROM_DATA_PROMPT_AND_ARTICLE,
     PromptAICallInterface, 
     PromptAiCallsInterface, 
     StructureChapter, 
     StructureChaptersData, 
     ACTION_WRITE_BODY_ARTICLE,
-    ACTION_WRITE_TOTAL_ARTICLE}                                 from './Interface/OpenAiInterface';
+    ACTION_WRITE_TOTAL_ARTICLE,
+    ACTION_CALLS_COMPLETE
+}                                                           from './Interface/OpenAiInterface';
 import { Console } from 'console';
+import { observableDiff } from 'deep-diff';
+import ChatGptApi from '../ChatGptApi';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -39,31 +45,48 @@ class OpenAiService {
 
     public async getInfoPromptAi(siteName: string, promptAiId:string, generateValue: number): Promise<boolean> {
         try {
-            const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
-            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
-            if( article?.body === undefined) {
-                return false;
-            }
-            const text:string|undefined                                     = this.unifyString(this.removeHtmlTags(article?.body));
 
             //Recupera la logina di generazione in base al sito su cui pubblicare
-            const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName, _id: promptAiId});           
+            const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName, _id: promptAiId});   
+            if(promptAi == null ) {  
+                console.log('getInfoPromptAi: promptAi == null');
+                return false;                
+            }
+            //Recupero la chiamata da fare definita nel db promptAi
+            const call:PromptAICallInterface|null                           = this.getCurrentCall(promptAi);            
+            if(call == null ) {  
+                console.log('getInfoPromptAi: call == null');
+                return false;                
+            }
+            
 
-            if(promptAi !== null && text !== undefined && article !== null ) {                
-                //Recupero la chiamata da fare definita nel db promptAi
-                const call:PromptAICallInterface|null                       = this.getCurrentCall(promptAi);
+            const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
+            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
+            if( article === null ) {
+                return false;
+            }            
+
+            console.log(call.readTo);
+            //Questw funzioni sul testo vengono attivate o disattivare dai settings della call 
+            let text:string|undefined  = this.unifyString(article[`${call.readTo}`]);                        
+            if( call.removeHtmlTags === true ) {
+                //Deve però rimuovere sempre i tag img
+                text = this.removeHtmlTags(article[`${call.readTo}`]);                                
+            }
+
+            if(promptAi !== null && text !== undefined && article !== null ) {                                                
                 
-                if( call != null ) {
-                    //Crea il json della call corrente con il campo complete ad 1 per il successivo salvataggio
-                    const updateCalls:PromptAiCallsInterface                = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;                    
-                    
-                    //Recupero i dati params per lo step corrente
+                if( call != null ) {                                                                
+                    //Recupero i dati params per lo step corrente                    
                     const step:ChatCompletionCreateParamsNonStreaming|null  = this.getCurrentStep(promptAi,call.key);                    
-                    console.log(step);
-                    if( step != null ) {                        
+                    console.log("==>"+step);
+
+                    if( step != null ) {            
+                        //Crea il json della call corrente con il campo complete ad 1 per il successivo salvataggio     
+                        const updateCalls:PromptAiCallsInterface                          = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;               
                         const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,text);
                         console.log(article?.title);
-                        const response: string | null                                     = await this.runChatCompletitions(jsonChatCompletation);
+                        const response: string | null = call.saveFunction !== ACTION_CALLS_COMPLETE ? await this.runChatCompletitions(jsonChatCompletation) : '';
                         if( response !== null ) {
                             //Aggiorna il campo calls e il campo data del PromptAiSchema
                             
@@ -77,7 +100,7 @@ class OpenAiService {
                                 try {                            
                                     const responseUpdate:boolean = await this.updateSchemaArticle(response, call, article );  
                                     if( responseUpdate === true ) {                                               
-                                        //await this.setArticleComplete(article, promptAi);                                    
+                                        await this.createDataSave(null, promptAi, call, updateCalls, siteName );                             
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } else {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:');    
@@ -90,7 +113,7 @@ class OpenAiService {
                                 try {                            
                                     const responseUpdate:boolean = await this.updateSchemaArticle(response, call, article );  
                                     if( responseUpdate === true ) {                                               
-                                        await this.setArticleComplete(article, promptAi);                                    
+                                        await this.createDataSave(null, promptAi, call, updateCalls, siteName );                                  
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } else {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:');    
@@ -117,12 +140,16 @@ class OpenAiService {
                                 if( responseUpdate === true && checkIfLastChapter === true ) {                                                                                                             
                                     console.log(structureChaptersData[0].getStructure.chapters);
                                     try {                                                                                                                        
-                                        await this.setArticleComplete(article, promptAi);                                    
+                                                                            
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } catch (error) {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:', error);
                                     }
-                                }                                
+                                }
+                            //Chiusura chiamate calls e salvataggio articolo a complete 1
+                            } else if( call.saveFunction == ACTION_CALLS_COMPLETE ) {
+                                this.setAllCallUncomplete(promptAi);
+                                await this.setArticleComplete(article, promptAi);
                             }
                                                         
                         } else {
@@ -151,12 +178,8 @@ class OpenAiService {
             // Se l'aggiornamento di 'Article' ha avuto successo, aggiorna 'PromptAi'
             //TODO: questa parte deve essere centralizzata perchè la deve chiamare anche il case sopra
             if (result) {
-                // Setta la calls a complete in 'PromptAi'
-                const updateCalls:PromptAiCallsInterface = this.setAllCallUncompliete(promptAi) as PromptAiCallsInterface; 
-                const filterPromptAi = { _id: promptAi._id };
-                const updatePromptAi = { calls: updateCalls, data : [{}] };
-        
-                await PromptAi.findOneAndUpdate(filterPromptAi, updatePromptAi);
+                 
+                
             } else {
                 console.error('Nessun articolo trovato o aggiornato.');
                 return false;
@@ -211,6 +234,33 @@ class OpenAiService {
                         let chatMessage:ChatCompletionUserMessageParam = {
                             role:    'user', 
                             content: '"""'+this.unifyString(this.removeHtmlTags(title))+'""". '+message
+                        };
+                        step.messages.push(chatMessage)
+                    }
+                    console.log("step");
+                    console.log(step);
+                }
+            break;
+            case TYPE_READ_FROM_DATA_PROMPT_AND_ARTICLE:
+                if( call.msgUser.field !== undefined ) {
+                    call.msgUser.key
+                    console.log("step");
+                    console.log(step);
+                    console.log("call");
+                    console.log(call);
+                    console.log("promptAi");
+                    const chiave                        = call.msgUser.field.toString();
+                    const dataJson:any                  = (promptAi as any)[chiave];                    
+                    
+                    if( dataJson !== null ) {
+                        let message                     = call.msgUser.message;
+                        const placeholder:string        = '[plachehorderContent]';
+                        message                         = message.replace(/\\"/g, '\\"');
+                        message                         = message.replace(placeholder, JSON.stringify(dataJson));
+
+                        let chatMessage:ChatCompletionUserMessageParam = {
+                            role:    'user', 
+                            content: '<article>'+this.unifyString(title)+'</article>. '+message
                         };
                         step.messages.push(chatMessage)
                     }
@@ -284,50 +334,49 @@ class OpenAiService {
     /**
      * Salva il dato in update nella tabella Article
      */
-    private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType): Promise<boolean> {      
-        const parserOptions: xml2js.Options = {
-            explicitArray: false, // Imposta su false per trattare gli elementi con un solo elemento come oggetti invece di array
-        };
-        
-        // Parser XML
-        const parser: xml2js.Parser = new xml2js.Parser(parserOptions);
-        
-        // Parsa il documento XML
-        parser.parseString(response, (err: any, result: any) => {
-            if (err) {
-                console.error('Errore nel parsing del file XML:', err);
-                return;
-            }
-            
-            // Recupera i nodi metaTitle, metaDescription e article separatamente
-            const metaTitle: string         = result.root.meta.metaTitle;
-            const metaDescription: string   = result.root.meta.metaDescription;
-            let articleXmlString: string    = new xml2js.Builder().buildObject(result.root.article);
-            articleXmlString                = articleXmlString.replace(/<\?xml.*?\?>/, '');
-            articleXmlString                = articleXmlString.replace(/<root>/g, '<article>');
-            articleXmlString                = articleXmlString.replace(/<\/root>/g, '</article>');
+    private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType): Promise<boolean> {    
+        const lastArticle:ArticleWithIdType | null  = await Article.findOne({ _id: article._id });   
+        let update = {};
 
-            
-            // Output del risultato
-            console.log('Meta Title:', metaTitle);
-            console.log('Meta Description:', metaDescription);
-            console.log('Article:', articleXmlString);
-        });
-        //TODO devi gestire bene il campo in cui salvare se prenderlo da calls o harcoded in base al tipo passato di funzione
-  
-        if( response !== null ) {
-            return false;
+        //Se in una chiamata riceve tutti i campi necessari a generare l'articolo  
+        if( call.saveFunction == ACTION_WRITE_TOTAL_ARTICLE ) {
+            const parser = new DOMParser();
+
+            // Parsa il documento XML
+            const xmlDoc = parser.parseFromString(response, 'text/xml');
+
+            // Recupera i nodi metaTitle, metaDescription e h1
+            const metaTitleNode = xmlDoc.getElementsByTagName('metaTitle')[0];
+            const metaDescriptionNode = xmlDoc.getElementsByTagName('metaDescription')[0];
+            const h1Node = xmlDoc.getElementsByTagName('h1')[0];
+
+            // Ottieni i testi dei nodi
+            const metaTitle = metaTitleNode.textContent;
+            const metaDescription = metaDescriptionNode.textContent;
+            const h1 = h1Node.textContent;
+
+            // Recupera il nodo <article>
+            const articleNode = xmlDoc.getElementsByTagName('article')[0];
+
+            // Ottieni il contenuto del nodo <article> come stringa
+            const articleContent = articleNode.toString();
+            update                          = {
+                titleGpt:       metaTitle,
+                descriptionGpt: metaDescription,
+                bodyGpt :       articleContent,
+                h1Gpt:          h1
+            };
+                
+        } else {
+            const baseArticle:string                = call.lastBodyAppend === true && lastArticle?.bodyGpt !== undefined ? lastArticle?.bodyGpt : '';
+            update                                  = {[call.saveTo] : baseArticle+' '+response};
         }
-
-        const lastArticle:ArticleWithIdType | null  = await Article.findOne({ _id: article._id });        
+        
         const filter                                = { _id: article._id };
-        const baseArticle:string                    = lastArticle?.bodyGpt !== undefined ? lastArticle?.bodyGpt : '';
-        const update                                = {[call.saveTo] : baseArticle+' '+response};
-
         return await Article.findOneAndUpdate(filter, update).then(result => {
             return true;
         }).catch(error => {            
-            console.error(`Si è verificato un errore durante la ricerca dell'articolo: ${error}`);
+            console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
             return false;
         });
     }
@@ -335,7 +384,7 @@ class OpenAiService {
     /**
      * Salva il dato nella tabella promptAI
      */
-    private async createDataSave(response: string, promptAi: PromptAiWithIdType, call: PromptAICallInterface, updateCalls:PromptAiCallsInterface, siteName:string): Promise<boolean> {
+    private async createDataSave(response: string|null, promptAi: PromptAiWithIdType, call: PromptAICallInterface, updateCalls:PromptAiCallsInterface, siteName:string): Promise<boolean> {
         const field: string = call.saveTo;
         let dataField: any = {}; // Inizializza dataField come un oggetto vuoto
     
@@ -345,11 +394,12 @@ class OpenAiService {
                 break;
         }
     
-
-        if( dataField == '' ) {
-            dataField = [{[call.saveKey]: JSON.parse(response)}];
-        } else {
-            dataField = dataField.map((item:any) => ({ ...item, [call.saveKey]: JSON.parse(response) }));    
+        if( response !== null ) {
+            if( dataField == '' ) {
+                dataField = [{[call.saveKey]: JSON.parse(response)}];
+            } else {
+                dataField = dataField.map((item:any) => ({ ...item, [call.saveKey]: JSON.parse(response) }));    
+            }
         }
         
         const filter            = { _id: promptAi._id };
@@ -393,14 +443,23 @@ class OpenAiService {
     /**
      * Effettua il reset di tutti i complete delle calls per poter lavorare con il nuovo articolo     
      */
-    public setAllCallUncompliete(promptAi: PromptAiWithIdType): PromptAiCallsInterface | null {
+    public async setAllCallUncomplete(promptAi: PromptAiWithIdType): Promise<boolean> {
         const calls: PromptAiCallsInterface = promptAi.calls as PromptAiCallsInterface;        
 
         for (let i = 0; i < calls.length; i++) {
             const call = calls[i];            
             call.complete = 0;            
         }
-        return calls;
+
+        const filterPromptAi = { _id: promptAi._id };
+        const updatePromptAi = { calls: calls, data : [{}] };
+
+        return await PromptAi.findOneAndUpdate(filterPromptAi, updatePromptAi).then(result => {
+            return true;
+        }).catch(error => {            
+            console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
+            return false;
+        });        
     }
 
     /**
@@ -408,6 +467,7 @@ class OpenAiService {
      */
     public getCurrentStep(promptAi: PromptAiWithIdType, call:string): ChatCompletionCreateParamsNonStreaming|null {
         const steps: any = promptAi.steps;   
+                    
         
         for (const item of steps) {
             if (item.hasOwnProperty(call)) {
