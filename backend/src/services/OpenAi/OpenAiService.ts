@@ -337,6 +337,7 @@ class OpenAiService {
     private async updateSchemaArticle(response: string, call: PromptAICallInterface, article:ArticleWithIdType): Promise<boolean> {    
         const lastArticle:ArticleWithIdType | null  = await Article.findOne({ _id: article._id });   
         let update = {};
+                
 
         //Se in una chiamata riceve tutti i campi necessari a generare l'articolo  
         if( call.saveFunction == ACTION_WRITE_TOTAL_ARTICLE ) {
@@ -359,7 +360,18 @@ class OpenAiService {
             const articleNode = xmlDoc.getElementsByTagName('article')[0];
 
             // Ottieni il contenuto del nodo <article> come stringa
-            const articleContent = articleNode.toString();
+            let articleContent = articleNode.toString();
+
+            const $ = cheerio.load(articleContent);
+            $('h2 strong').each(function() {            
+                $(this).replaceWith($(this).text());
+            });
+
+            const articleCheerio:string|null = $('article').html();
+            if(  articleCheerio != null ) {
+                articleContent = '<article>'+articleCheerio+'</article>';
+            }
+
             update                          = {
                 titleGpt:       metaTitle,
                 descriptionGpt: metaDescription,
@@ -368,6 +380,16 @@ class OpenAiService {
             };
                 
         } else {
+            const $ = cheerio.load(response);
+            $('h2 strong').each(function() {            
+                $(this).replaceWith($(this).text());
+            });
+
+            const articleCheerio:string|null = $('article').html();
+            if(  articleCheerio != null ) {
+                response = '<article>'+articleCheerio+'</article>';
+            }
+            
             const baseArticle:string                = call.lastBodyAppend === true && lastArticle?.bodyGpt !== undefined ? lastArticle?.bodyGpt : '';
             update                                  = {[call.saveTo] : baseArticle+' '+response};
         }
@@ -483,9 +505,12 @@ class OpenAiService {
             if (chatCompletionParam) {                                                
                 console.log(chatCompletionParam);
                 const completion = await this.openai.chat.completions.create(chatCompletionParam);       
-                console.log(completion.choices[0].message.content);    
-                if( completion.choices[0].message.content !== null ) {       
-                    return completion.choices[0].message.content;
+                
+                if( completion.choices[0].message.content !== null ) {     
+                    let response = completion.choices[0].message.content.replace(/minLength="\d+ words"/g, '');
+                    response = response.replace(/maxLength="\d+ words"/g, '');  
+                    console.log("==>"+response);    
+                    return response;
                 } else {
                     return null;
                 }
