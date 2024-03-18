@@ -8,6 +8,7 @@ type ArticleType = {
     title:              string;
     description:        string;
     h1?:                string;
+    img:                string;
     bodyGpt?:           string;
     titleGpt?:          string;
     descriptionGpt?:    string;
@@ -55,7 +56,11 @@ const ArticleSchema   = new Schema({
     h1: { 
         type:       String, 
         required:   true,        
-    }, 
+    },      
+    img: { 
+        type:       String, 
+        required:   true,        
+    },      
     bodyGpt: { 
         type:       String, 
         required:   false,        

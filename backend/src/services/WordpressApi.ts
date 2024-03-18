@@ -167,38 +167,40 @@ class WordpressApi {
             }
                 
 
-            const chatGptApi = new ChatGptApi();
-            let textString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
-            console.log(article.titleGpt);
+            // const chatGptApi = new ChatGptApi();
+            // let textString: string | null = await chatGptApi.getCsvKeywords(article.titleGpt);
+            // console.log(article.titleGpt);
             
-            if (textString == null) {
-                console.error(textString);
-                await writeErrorLog("sendToWPApi textString === null");
-                return false;
-            }
+            // if (textString == null) {
+            //     console.error(textString);
+            //     await writeErrorLog("sendToWPApi textString === null");
+            //     return false;
+            // }
             
-            const regex = /\[[^\]]*\]/;
-            const jsonString = textString.match(regex);
-            if (jsonString == null) {
-                await writeErrorLog("sendToWPApi jsonString === null");
-                console.error(jsonString);
-                return false;
-            }                        
+            // const regex = /\[[^\]]*\]/;
+            // const jsonString = textString.match(regex);
+            // if (jsonString == null) {
+            //     await writeErrorLog("sendToWPApi jsonString === null");
+            //     console.error(jsonString);
+            //     return false;
+            // }                        
 
-            let results: any = [];
-            results = JSON.parse(jsonString[0]);            
-            console.log(results);            
+            // let results: any = [];
+            // results = JSON.parse(jsonString[0]);            
+            // console.log(results);            
     
-            let imageWP = await findImageByWords(results, sitePublication._id);            
+            // let imageWP = await findImageByWords(results, sitePublication._id);            
     
-            if (imageWP === undefined && article.titleGpt !== undefined) {
-                console.log('eccomi');
-                const words = this.adaptReponseWeight(article.titleGpt);
-                console.log(words);
-                imageWP = await findImageByWords(words, sitePublication._id);
-            }
+            // if (imageWP === undefined && article.titleGpt !== undefined) {
+            //     console.log('eccomi');
+            //     const words = this.adaptReponseWeight(article.titleGpt);
+            //     console.log(words);
+            //     imageWP = await findImageByWords(words, sitePublication._id);
+            // }
     
-            const reponseImage: any = await this.uploadImageAndGetId(imageWP.imageLink, sitePublication, article.titleGpt);                
+            // const reponseImage: any = await this.uploadImageAndGetId(article.imageLink, sitePublication, article.titleGpt);                
+
+            const reponseImage: any = await this.uploadImageAndGetId(article.img, sitePublication, article.titleGpt);                
             const userData = {
                 username: sitePublication.username,
                 password: sitePublication.password

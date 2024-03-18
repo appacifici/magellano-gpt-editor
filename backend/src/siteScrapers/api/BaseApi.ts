@@ -4,7 +4,7 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import cheerio from 'cheerio';
 import * as fs                              from 'fs';
 import { ReadSitemapSingleNodeResponse, ReadSitemapResponse, UrlNode } from "../interface/SitemapInterface";
-import { ScrapedData } from "../interface/VanityfairInterface";
+import { ScrapedData } from "../interface/ScrapedInterface";
 import Article, { ArticleType, ArticleWithIdType } from "../../database/mongodb/models/Article";
 import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 import { writeErrorLog } from "../../services/Log";
@@ -237,19 +237,21 @@ class BaseApi {
                         && scrapedData.metaTitle !== undefined
                         && scrapedData.metaDescription !== undefined
                         && scrapedData.h1Content !== undefined
+                        && scrapedData.img !== undefined
                     ) {
                         const articleData: ArticleType = {
-                            site: site._id,
-                            sitePublication: sitePublication._id,
-                            url: urlNode.loc,
-                            body: scrapedData?.bodyContainerHTML,
-                            title: scrapedData?.metaTitle,
-                            description: scrapedData?.metaDescription,
-                            h1: scrapedData?.h1Content,
-                            genarateGpt: 0,
-                            send: 0,
-                            categoryPublishSite: site.categoryPublishSite,
-                            userPublishSite: site.userPublishSite,
+                            site:                   site._id,
+                            sitePublication:        sitePublication._id,
+                            url:                    urlNode.loc,
+                            body:                   scrapedData?.bodyContainerHTML,
+                            title:                  scrapedData?.metaTitle,
+                            description:            scrapedData?.metaDescription,
+                            h1:                     scrapedData?.h1Content,
+                            img:                    scrapedData?.img,
+                            genarateGpt:            0,
+                            send:                   0,
+                            categoryPublishSite:    site.categoryPublishSite,
+                            userPublishSite:        site.userPublishSite,
                         };
 
                         this.insertArticle(articleData);

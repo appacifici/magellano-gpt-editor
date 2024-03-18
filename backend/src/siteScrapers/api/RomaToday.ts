@@ -7,7 +7,7 @@ import Site, {SiteArrayWithIdType, SiteWithIdType}              from "../../data
 import BaseApi                                  from "./BaseApi";
 import { ReadSitemapSingleNodeResponse,
          ReadSitemapResponse }                  from "../interface/SitemapInterface";
-import { ScrapedData }                          from "../interface/VanityfairInterface";
+import { ScrapedData }                          from "../interface/ScrapedInterface";
 import chatGptApi    from "../../services/ChatGptApi";
 import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
 import { writeErrorLog } from "../../services/Log";
@@ -45,12 +45,14 @@ class RomaToday extends BaseApi {
             const h1Content         = cheerioLoad('h1').text() || '';    
             const metaTitle         = cheerioLoad('title').text();
             const metaDescription   = cheerioLoad('meta[name="description"]').attr('content');
+            const img               = cheerioLoad('img.u-size-responsive-view').first().attr('src');
     
             return {
                 bodyContainerHTML: bodyContainerHTML,
                 h1Content: h1Content,
                 metaTitle: metaTitle,
-                metaDescription: metaDescription
+                metaDescription: metaDescription,
+                img: img
             };
         } catch (error:any) {
             await writeErrorLog(`scrapeWebsite: RomaToday.it: Errore durante lo scraping della pagina`);

@@ -6,7 +6,7 @@ import OpenAI                               from "openai";
 import MarkdownIt                           from 'markdown-it';
 import fs                                   from 'fs';
 
-import { ScrapedData }                      from "../siteScrapers/interface/VanityfairInterface";
+import { ScrapedData }                      from "../siteScrapers/interface/ScrapedInterface";
 import Article, { ArticleWithIdType}        from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
 import connectMongoDB                       from "../database/mongodb/connect";
@@ -49,7 +49,8 @@ class ChatGptApi {
                     bodyContainerHTML:  article.body,
                     h1Content:          article.h1,
                     metaTitle:          article.title,
-                    metaDescription:    article.description
+                    metaDescription:    article.description,
+                    img:                article.img,
                 };
     
                 const articleGpt: string | null | null  = await this.processArticle(data);
