@@ -8,8 +8,8 @@ program.version('1.0.0').description('CLI team commander')
     .action(async (options) => { // Aggiungi async qui
         const wodpressApi = new WordpressApi();
         switch (options.site) {
-            case 'vanityfair.it':
-            case 'ilcorrieredellacitta.com':
+            case 'roma.cronacalive.it':
+            case 'bluedizioni.it':
                 await wodpressApi.sendToWPApi(options.site, 0); // Aggiungi await qui
                 process.exit(1); // Ora puoi mettere l'exit qui
                 break;

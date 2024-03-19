@@ -13,11 +13,47 @@ import ImageWP,{ ImageType }                from "../database/mongodb/models/Ima
 import { findImageByWords }                 from "./MongooseFind";
 import ChatGptApi                           from "./ChatGptApi";
 import { writeErrorLog }                    from "./Log";
+import { WordpressCategory } from "./OpenAi/Interface/WordpressInterface";
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 class WordpressApi {
     constructor() {
         connectMongoDB();
+    }
+
+    public async getWpApiCategories(siteName: string ) {
+        try {
+            const sitePublication: any = await SitePublication.findOne({ sitePublication: siteName });
+            const page = sitePublication?.page;
+            if (sitePublication !== null) {
+                const url:string        =`${sitePublication.urlCategories}`;  
+                const response          = await axios.get(url);
+                console.log(response);
+                if (response.data && Array.isArray(response.data)) {
+                    const wordpressCategory: WordpressCategory[] = response.data.map((cat: any) => ({
+                        id: cat.id,
+                        link: cat.link,
+                        name: cat.name,
+                        slug: cat.slug,
+                      }));
+                      console.log(wordpressCategory);
+
+                    const filtro = { sitePublication: siteName };
+                    const aggiornamento = { categories: wordpressCategory };
+                    await SitePublication.findOneAndUpdate(filtro, aggiornamento, { new: true });
+
+                } else {
+                    console.log('getWpApiCategories: No Categories found.');
+                }
+                                                              
+            }
+            
+        } catch (error:any) {
+            console.error('getImagesFromWordPress: Error fetching categories');
+            await writeErrorLog("getWpApiCategories: Error fetching categories:");
+            await writeErrorLog(error);
+            process.exit(1);
+        }               
     }
 
     public async getImagesFromWordPress(siteName: string ) {
@@ -157,10 +193,12 @@ class WordpressApi {
     
     
     public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {
-        try {
-            const site: SiteWithIdType | null = await Site.findOne({ site: siteName });
-            const article: ArticleWithIdType | null = await Article.findOne({ site: site?._id, send: send, genarateGpt: 1 });
-            const sitePublication: SitePublicationWithIdType | null = await SitePublication.findOne({ _id: article?.sitePublication.toString() });
+        try {            
+            const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
+            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, send:send });
+            const site: SiteWithIdType | null                               = await Site.findOne({ _id: article?.site });
+
+
             if (sitePublication === null || article === null || article.titleGpt === undefined) {
                 await writeErrorLog("sendToWPApi sitePublication === null || article === null || article.titleGpt === undefined" );
                 return false;
@@ -235,9 +273,12 @@ class WordpressApi {
                         description: article.descriptionGpt
                     },
                     status: 'publish',
-                    featured_media: reponseImage.id
+                    featured_media: reponseImage.id,
+                    author: article?.userPublishSite, // Aggiungi lo userId dell'autore
+                    categories: [article?.categoryPublishSite]
                 };
     
+                console.log(postData);
                 // Effettua la richiesta POST per creare il post
                 await axios.post(wordpressAPIURL, postData, {
                     headers: {
@@ -250,7 +291,7 @@ class WordpressApi {
                 const filtro = { _id: article._id };
                 const aggiornamento = { send: 1 };
                 await Article.findOneAndUpdate(filtro, aggiornamento, { new: true });
-                console.log('sendToWPApi: '+siteName + ': Set send 1 avvenuta con successo');
+                console.log('sendToWPApi: '+siteName + ': Set send 1 avvenuta con successo:' +article._id);
             }
         } catch (error) {            
             console.log(error);

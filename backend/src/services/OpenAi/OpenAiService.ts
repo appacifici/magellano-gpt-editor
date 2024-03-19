@@ -24,7 +24,10 @@ import {
     StructureChaptersData, 
     ACTION_WRITE_BODY_ARTICLE,
     ACTION_WRITE_TOTAL_ARTICLE,
-    ACTION_CALLS_COMPLETE
+    ACTION_CALLS_COMPLETE,
+    TYPE_READ_WRITE_DYNAMIC_SCHEMA,
+    TypeMsgUserRaplace,
+    ACTION_READ_WRITE_DYNAMIC_SCHEMA
 }                                                           from './Interface/OpenAiInterface';
 import { Console } from 'console';
 import { observableDiff } from 'deep-diff';
@@ -62,30 +65,24 @@ class OpenAiService {
 
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
             const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
-            if( article === null ) {
+            if( sitePublication === null || article === null ) {
                 return false;
             }            
 
-            console.log(call.readTo);
-            //Questw funzioni sul testo vengono attivate o disattivare dai settings della call 
-            let text:string|undefined  = this.unifyString(article[`${call.readTo}`]);                        
-            if( call.removeHtmlTags === true ) {
-                //Deve però rimuovere sempre i tag img
-                text = this.removeHtmlTags(article[`${call.readTo}`]);                                
-            }
+            console.log(call.readTo );            
+            const text = this.getDinamycField(call,sitePublication, article);
 
-            if(promptAi !== null && text !== undefined && article !== null ) {                                                
+            if(promptAi !== null && text !== null && article !== null ) {                                                
                 
                 if( call != null ) {                                                                
                     //Recupero i dati params per lo step corrente                    
-                    const step:ChatCompletionCreateParamsNonStreaming|null  = this.getCurrentStep(promptAi,call.key);                    
-                    console.log("==>"+step);
+                    const step:ChatCompletionCreateParamsNonStreaming|null  = this.getCurrentStep(promptAi,call.key);                                        
 
                     if( step != null ) {            
                         //Crea il json della call corrente con il campo complete ad 1 per il successivo salvataggio     
                         const updateCalls:PromptAiCallsInterface                          = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;               
                         const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,text);
-                        console.log(article?.title);
+                        
                         const response: string | null = call.saveFunction !== ACTION_CALLS_COMPLETE ? await this.runChatCompletitions(jsonChatCompletation) : '';
                         if( response !== null ) {
                             //Aggiorna il campo calls e il campo data del PromptAiSchema
@@ -146,6 +143,20 @@ class OpenAiService {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:', error);
                                     }
                                 }
+
+                            } else if( call.saveFunction == ACTION_READ_WRITE_DYNAMIC_SCHEMA ) {
+                                try {                            
+                                    const responseUpdate:boolean = await this.updateDynamicResponse(response, call, article );  
+                                    if( responseUpdate === true ) {                                               
+                                        await this.createDataSave(null, promptAi, call, updateCalls, siteName );                                  
+                                        console.log('Salvataggio generato correttamente e completato con successo.');
+                                    } else {
+                                        console.error('Si è verificato un errore durante l\'aggiornamento:');    
+                                    }
+                                } catch (error) {
+                                    console.error('Si è verificato un errore durante l\'aggiornamento:', error);
+                                }
+
                             //Chiusura chiamate calls e salvataggio articolo a complete 1
                             } else if( call.saveFunction == ACTION_CALLS_COMPLETE ) {
                                 this.setAllCallUncomplete(promptAi);
@@ -169,6 +180,40 @@ class OpenAiService {
         return true;
     }
 
+    private getDinamycField(call:PromptAICallInterface,sitePublication: SitePublicationWithIdType,article:ArticleWithIdType): string|object {
+        if( typeof call.readTo == 'object' ) {
+            // console.log(call);
+
+            let response:any = {};         
+            for (const readTo of call.readTo) {                
+                switch( readTo.schema ) {
+                    case 'Article':
+                        response[`${readTo.field}`] = typeof article[`${readTo.field}`] == 'object' ? JSON.stringify(article[`${readTo.field}`] ) : article[`${readTo.field}`] ;
+                    break;
+                    case 'SitePubblication':                        
+                        response[`${readTo.field}`] = typeof sitePublication[`${readTo.field}`] == 'object' ? JSON.stringify(sitePublication[`${readTo.field}`]) : sitePublication[`${readTo.field}`];
+                    break;
+                }                
+            }
+            console.log(response);
+
+            
+            return response;
+        } else {
+
+            //Questw funzioni sul testo vengono attivate o disattivare dai settings della call 
+            let text:string|undefined  = this.unifyString(article[`${call.readTo}`]);                        
+            if( call.removeHtmlTags === true ) {
+                //Deve però rimuovere sempre i tag img
+                text = this.removeHtmlTags(article[`${call.readTo}`]);
+            }
+            return text;
+        }
+    }
+
+    /**
+     * Setta gli articoli a complete nella genrazione gpt     
+     */
     private async setArticleComplete(article:ArticleWithIdType, promptAi: PromptAiWithIdType) {
         try {
             const update = {genarateGpt:1};
@@ -193,15 +238,13 @@ class OpenAiService {
     /**
      * Funzione che appende il role user al ChatCompletation     
      */
-    private appendUserMessage(step:ChatCompletionCreateParamsNonStreaming,call:PromptAICallInterface,promptAi: PromptAiWithIdType,title:string): ChatCompletionCreateParamsNonStreaming {
-                
+    private appendUserMessage(step:ChatCompletionCreateParamsNonStreaming,call:PromptAICallInterface,promptAi: PromptAiWithIdType,title:string|any): ChatCompletionCreateParamsNonStreaming {            
         switch( call.msgUser.type ) {
             //Se il tipo è inJson significa che il messaggio utente e nello stesso campo
             case TYPE_IN_JSON:
-                if( call.msgUser.user !== undefined ) {
+                if( call.msgUser.user !== undefined && typeof title == 'string' ) {
                     for (const userMsg of call.msgUser.user) {
-                        const placeholder:string    = '[plachehorderContent]';
-                        console.log("====>"+userMsg.message);
+                        const placeholder:string    = '[plachehorderContent]';                        
                         title                       = title.replace(/\\"/g, '\\"');                        
                         const msg:string            = userMsg.message.replace(placeholder, title);
                         let chatMessage:ChatCompletionUserMessageParam = {
@@ -215,7 +258,7 @@ class OpenAiService {
                 }         
             break;
             case TYPE_READ_STRUCTURE_FIELD:
-                if( call.msgUser.field !== undefined ) {
+                if( call.msgUser.field !== undefined && typeof title == 'string') {
                     call.msgUser.key
                     console.log("step");
                     console.log(step);
@@ -242,7 +285,7 @@ class OpenAiService {
                 }
             break;
             case TYPE_READ_FROM_DATA_PROMPT_AND_ARTICLE:
-                if( call.msgUser.field !== undefined ) {
+                if( call.msgUser.field !== undefined && typeof title == 'string') {
                     call.msgUser.key
                     console.log("step");
                     console.log(step);
@@ -263,6 +306,40 @@ class OpenAiService {
                             content: '<article>'+this.unifyString(title)+'</article>. '+message
                         };
                         step.messages.push(chatMessage)
+                    }
+                    console.log("step");
+                    console.log(step);
+                }
+            break;
+            case TYPE_READ_WRITE_DYNAMIC_SCHEMA:
+                
+                if( call.msgUser.replace !== undefined && typeof title == 'object') {
+                    call.msgUser.key
+                    console.log("step");
+                    console.log(step);
+                    console.log("call");
+                    console.log(call);
+                    console.log("promptAi");
+                    const oReplace:[TypeMsgUserRaplace]|undefined                        = call.msgUser.replace;                               
+                    
+                    
+                    if( oReplace !== undefined && call.msgUser.user != undefined ) {
+                        for (const userMsg of call.msgUser.user) {
+                            let message                         = userMsg.message;                        
+                            for (const itemReplace of oReplace) {                                 
+                                const placeholder:string        = `[#${itemReplace.field}#]`;
+                                message                         = message.replace(/\\"/g, '\\"');
+                                message                         = message.replace(placeholder, title[`${itemReplace.field}`])+'.';
+                            }
+                            
+                            console.log(title);
+                            let chatMessage:ChatCompletionUserMessageParam = {
+                                role:    'user', 
+                                content: message
+                            };
+                            step.messages.push(chatMessage)
+                            console.log('eccoim');
+                        }
                     }
                     console.log("step");
                     console.log(step);
@@ -330,6 +407,44 @@ class OpenAiService {
         return checkLast;
     }
     
+    /**
+     * Salva il dato in update nella tabella Article
+     */
+    private async updateDynamicResponse(response: string, call: PromptAICallInterface, article:ArticleWithIdType): Promise<boolean> {    
+        const jsonResponse:any = JSON.parse(response);
+        if( typeof call.saveTo === 'string' ) {
+            return false;
+        }
+        
+        for (const saveTo of call.saveTo) {                
+            switch( saveTo.schema ) {
+                case 'Article':
+                    const value  = jsonResponse[`${saveTo.responseField}`];
+                    const filter = { _id: article._id };
+                    const field  = saveTo.field 
+                    const update = {[field]: value}
+                    await Article.findOneAndUpdate(filter, update).then(result => {
+                        
+                    }).catch(error => {            
+                        console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
+                        return false;
+                    });
+                break;
+                case 'SitePubblication':                        
+                    
+                break;
+            }                
+        }
+        
+        
+        return true;
+        // return await Article.findOneAndUpdate(filter, update).then(result => {
+        //     return true;
+        // }).catch(error => {            
+        //     console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
+        //     return false;
+        // });
+    }
 
     /**
      * Salva il dato in update nella tabella Article
@@ -391,9 +506,15 @@ class OpenAiService {
             }
             
             const baseArticle:string                = call.lastBodyAppend === true && lastArticle?.bodyGpt !== undefined ? lastArticle?.bodyGpt : '';
+            
+            if( typeof call.saveTo !== 'string') {
+                console.log("updateSchemaArticle: Save string non consentuito");
+                return false;
+            }
             update                                  = {[call.saveTo] : baseArticle+' '+response};
         }
-        
+
+        console.log(update);
         const filter                                = { _id: article._id };
         return await Article.findOneAndUpdate(filter, update).then(result => {
             return true;
@@ -407,7 +528,16 @@ class OpenAiService {
      * Salva il dato nella tabella promptAI
      */
     private async createDataSave(response: string|null, promptAi: PromptAiWithIdType, call: PromptAICallInterface, updateCalls:PromptAiCallsInterface, siteName:string): Promise<boolean> {
-        const field: string = call.saveTo;
+        let field: string = '';
+
+        if(  typeof call.saveTo !== 'string' ) {
+            console.log('Save To del tipo sbagliato');
+
+            field = '';
+        } else {
+            field = call.saveTo;
+        }
+        
         let dataField: any = {}; // Inizializza dataField come un oggetto vuoto
     
         switch (field) {
@@ -488,11 +618,9 @@ class OpenAiService {
      * Recupera il ChatCompletionCreateParamsNonStreaming dello step attuale     
      */
     public getCurrentStep(promptAi: PromptAiWithIdType, call:string): ChatCompletionCreateParamsNonStreaming|null {
-        const steps: any = promptAi.steps;   
-                    
-        
-        for (const item of steps) {
-            if (item.hasOwnProperty(call)) {
+        const steps: any = promptAi.steps;                                   
+        for (const item of steps) {            
+            if (item.hasOwnProperty(call)) {                
                 return item[call];                
             }
         }       
@@ -508,8 +636,8 @@ class OpenAiService {
                 
                 if( completion.choices[0].message.content !== null ) {     
                     let response = completion.choices[0].message.content.replace(/minLength="\d+ words"/g, '');
-                    response = response.replace(/maxLength="\d+ words"/g, '');  
-                    console.log("==>"+response);    
+                    response = response.replace(/maxLength="\d+ words"/g, '');                        
+                    console.log(response);
                     return response;
                 } else {
                     return null;

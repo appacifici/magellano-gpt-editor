@@ -12,15 +12,16 @@ program.version('1.0.0').description('CLI team commander')
             // case 'vanityfair.it':                                       
             // case 'ilcorrieredellacitta.com':   
             case 'roma.cronacalive.it':   
+            case 'bluedizioni.it':    
                 try {
                     // await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    await openAiService.getInfoPromptAi(options.site, "65f829454225d9267daf2308", 0); // Usa await per attendere il completamento della promessa
+                    await openAiService.getInfoPromptAi(options.site, "65f9ff50ef1c9565c99ea49f", 0); // Usa await per attendere il completamento della promessa
                     process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);
                     process.exit(1); // Uscire con codice di errore
                 }
-                break;
+                break;           
             default:
                 console.error('Sito non supportato:', options.site);
                 process.exit(1); // Uscire con codice di errore se il sito non è supportato

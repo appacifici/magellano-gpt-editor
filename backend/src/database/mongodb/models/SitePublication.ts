@@ -1,14 +1,18 @@
 import mongoose, { Document, Schema, Model, ObjectId } from 'mongoose';
+import { WordpressCategory } from '../../../services/OpenAi/Interface/WordpressInterface';
 
 type SitePublicationType = {        
     sitePublication:    string;
     tokenUrl:           string;
     url:                string;
     urlImages:          string;
+    urlCategories:      string;
+    categories?:        WordpressCategory[]|null;
     username:           string;
     password:           string; 
     active:             number;   
     page:               number;   
+    [key: string]:      any;
 }
 
 interface ISitePublication extends Document, Omit<SitePublicationType, '_id'> {}
@@ -38,6 +42,16 @@ const SitePublicationSchema   = new Schema({
     urlImages: { 
         type:       String, 
         required:   true, 
+        maxlength:  500
+    },    
+    urlCategories: { 
+        type:       String, 
+        required:   true, 
+        maxlength:  500
+    },    
+    categories: { 
+        type:       Object, 
+        required:   false, 
         maxlength:  500
     },    
     username: { 
