@@ -195,11 +195,13 @@ class WordpressApi {
     public async sendToWPApi(siteName: string, send: number): Promise<Boolean> {
         try {            
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
-            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, send:send });
+            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt:1, send:0 });
             const site: SiteWithIdType | null                               = await Site.findOne({ _id: article?.site });
 
 
-            if (sitePublication === null || article === null || article.titleGpt === undefined) {
+            
+            if (sitePublication === null || article === null || article.titleGpt === null) {
+                console.log(article);
                 await writeErrorLog("sendToWPApi sitePublication === null || article === null || article.titleGpt === undefined" );
                 return false;
             }

@@ -64,7 +64,7 @@ class OpenAiService {
             
 
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
-            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue });
+            const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;
             if( sitePublication === null || article === null ) {
                 return false;
             }            
@@ -531,8 +531,6 @@ class OpenAiService {
         let field: string = '';
 
         if(  typeof call.saveTo !== 'string' ) {
-            console.log('Save To del tipo sbagliato');
-
             field = '';
         } else {
             field = call.saveTo;

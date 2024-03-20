@@ -17,6 +17,7 @@ type ArticleType = {
     genarateGpt:        number;   
     categoryPublishSite:Number;   
     userPublishSite:    Number;   
+    lastMod:            Date;   
     [key: string]:      any;
 }
 
@@ -89,6 +90,10 @@ const ArticleSchema   = new Schema({
         min:        0, 
         max:        1 
     },
+    lastMod: { 
+        type:       Date, 
+        required:   false,
+    },
     categoryPublishSite: { 
         type:       Number, 
         required:   false        
@@ -101,7 +106,7 @@ const ArticleSchema   = new Schema({
 
 ArticleSchema.index({ site: 1, url:1 }, { unique: true });
 ArticleSchema.index({ send: -1 });
-ArticleSchema.index({ generate: -1 });
+ArticleSchema.index({ generate: -1, sitePublication: -1, lastMod:-1 });
 
 const Article:Model<IArticle> = mongoose.models.Article || mongoose.model('Article', ArticleSchema);
 export type {IArticle,ArticleType, ArticleWithIdType, ArticleArrayWithIdType, ArticleArrayType};

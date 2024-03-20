@@ -179,7 +179,10 @@ class BaseApi {
             // Itero su tutti gli elementi <url>
             urlNodes.each((index, element) => {
                 const locValue = node(element).find('loc').text();
-                const lastmodValue = node(element).find('lastmod').text();
+                let lastmodValue = node(element).find('lastmod').text();                
+                if( lastmodValue == '' ) {
+                    lastmodValue = node(element).find('news\\:publication_date').text()
+                }
 
                 if (index <= 9) {
                     let urlNode: UrlNode = { loc: locValue, lastmod: lastmodValue };
@@ -231,6 +234,7 @@ class BaseApi {
                     const loc = urlNode.loc;
                     const lastmod = urlNode.lastmod;
                     const scrapedData: ScrapedData | null = await scrapeWebsite(loc);
+                
 
                     if (scrapedData
                         && scrapedData.bodyContainerHTML !== undefined
@@ -239,6 +243,7 @@ class BaseApi {
                         && scrapedData.h1Content !== undefined
                         && scrapedData.img !== undefined
                     ) {
+                        
                         const articleData: ArticleType = {
                             site:                   site._id,
                             sitePublication:        sitePublication._id,
@@ -250,6 +255,7 @@ class BaseApi {
                             img:                    scrapedData?.img,
                             genarateGpt:            0,
                             send:                   0,
+                            lastMod:                new Date(urlNode.lastmod),
                             categoryPublishSite:    site.categoryPublishSite,
                             userPublishSite:        site.userPublishSite,
                         };

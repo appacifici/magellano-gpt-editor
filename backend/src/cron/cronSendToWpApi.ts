@@ -5,7 +5,7 @@ const job = new CronJob(
 	'*/30 * * * *', // cronTime
 	function () {		
 		const wodpressApi = new WordpressApi();
-        wodpressApi.sendToWPApi('ilcorrieredellacitta.com', 0); 
+        wodpressApi.sendToWPApi('bluedizioni.it', 0); 
 	}, // onTick
 	null, // onComplete
 	true, // start
