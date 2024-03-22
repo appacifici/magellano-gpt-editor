@@ -55,7 +55,7 @@ class DinamycScraper extends BaseApi {
             }
 
             return {
-                bodyContainerHTML: this.removeHtmlTags.bind(this)(bodyContainerHTML),
+                bodyContainerHTML: removeHtmlTags(bodyContainerHTML),
                 h1Content: h1Content,
                 metaTitle: metaTitle,
                 metaDescription: metaDescription,
@@ -69,22 +69,22 @@ class DinamycScraper extends BaseApi {
         }
     }
 
-    private removeHtmlTags(htmlString:string) {
-        // Carica la stringa HTML utilizzando cheerio
-        const $ = cheerio.load(htmlString);
-        
-        // Trova tutti i tag HTML e rimuovili
-        $('*').each((index: any, element: any) => {
-          $(element).replaceWith($(element).text().trim());
-        });
-        
-        // Ritorna la stringa senza tag HTML
-        return $.text().trim();
-      }
-
     public sleep(ms:any) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 }
+
+function removeHtmlTags(htmlString:string) {
+    // Carica la stringa HTML utilizzando cheerio
+    const $ = cheerio.load(htmlString);
+    
+    // Trova tutti i tag HTML e rimuovili
+    $('*').each((index: any, element: any) => {
+      $(element).replaceWith($(element).text().trim());
+    });
+    
+    // Ritorna la stringa senza tag HTML
+    return $.text().trim();
+  }
 
 export default DinamycScraper;
