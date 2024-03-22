@@ -48,7 +48,7 @@ class RomaToday extends BaseApi {
             const img               = cheerioLoad('img.u-size-responsive-view').first().attr('src');
     
             return {
-                bodyContainerHTML: bodyContainerHTML,
+                bodyContainerHTML: this.removeHtmlTags(bodyContainerHTML),
                 h1Content: h1Content,
                 metaTitle: metaTitle,
                 metaDescription: metaDescription,
@@ -61,6 +61,19 @@ class RomaToday extends BaseApi {
             return null;
         }
     }
+
+    private removeHtmlTags(htmlString:string) {
+        // Carica la stringa HTML utilizzando cheerio
+        const $ = cheerio.load(htmlString);
+        
+        // Trova tutti i tag HTML e rimuovili
+        $('*').each((index: any, element: any) => {
+          $(element).replaceWith($(element).text().trim());
+        });
+        
+        // Ritorna la stringa senza tag HTML
+        return $.text().trim();
+      }
 }
 
 export default RomaToday;

@@ -35,51 +35,52 @@ class BaseApi {
         return result;
     }
 
-    //Legge una sitemap che contiene la lista di tutte le sotto sitemap 
     protected async readFromListSitemap(siteName: string, scrapeWebsite: ScrapeWebsiteFunction, readSitemapFunction:ReadSitemapFunction) {        
         const results: SiteArrayWithIdType = await this.getSitemapBySite(siteName);
         
-        results.forEach(async (result: SiteWithIdType) => {
-            const sitePublication: SitePublicationWithIdType | null = await this.getSitePublication(result.sitePublication);
-
-            const url = result.url;
-            const sitemap: ReadSitemapSingleNodeResponse = await this.readFirstNodeSitemapFromUrl(url);
-
-            if (sitemap.success === true && sitePublication !== null) {
-                let loc: string = '';
-                let date: Date | null = null;
-                date = new Date();
-
-                if (sitemap.data != undefined) {
-                    date = new Date(sitemap.data.lastmod);
-                    loc = sitemap.data.loc;
+        // Inizializza un array per raccogliere le promesse
+        const promises = [];
+    
+        for (const result of results) {
+            // Aggiungi una promessa all'array senza utilizzare 'await' qui
+            promises.push((async () => {
+                const sitePublication: SitePublicationWithIdType | null = await this.getSitePublication(result.sitePublication);
+    
+                const url = result.url;
+                const sitemap: ReadSitemapSingleNodeResponse = await this.readFirstNodeSitemapFromUrl(url);
+    
+                if (sitemap.success === true && sitePublication !== null) {
+                    let loc: string = '';
+                    let date: Date | null = null;
+                    date = new Date();
+    
+                    if (sitemap.data != undefined) {
+                        date = new Date(sitemap.data.lastmod);
+                        loc = sitemap.data.loc;
+                    }
+    
+                    const updateData = {
+                        lastMod: new Date(date),
+                        lastUrl: loc,
+                        active: 1,
+                    };
+    
+                    await Site.updateOne({ url: url }, { $set: updateData });
+    
+                    const sitemapDetail: ReadSitemapResponse|null = await readSitemapFunction(loc);
+                    if (sitemapDetail != null && sitemapDetail.data) {
+                        // Logica per inserire l'articolo originale
+                        await this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);
+                    }
                 }
-
-                const updateData = {
-                    lastMod: new Date(date),
-                    lastUrl: loc,
-                    active: 1,
-                };
-
-                Site.updateOne({ url: url }, { $set: updateData })
-                    .then(async (result) => { 
-                        console.log('Site aggiornato con successo:', url);
-                    })
-                    .catch(async (error:any) => {
-                        await writeErrorLog('Errore durante l\'elaborazione dell\'articolo:');
-                        await writeErrorLog(error);
-                        console.error('Errore durante l\'elaborazione dell\'articolo');
-                    });
-
-
-                const sitemapDetail: ReadSitemapResponse|null = await readSitemapFunction(loc);
-                if (sitemapDetail!= null && sitemapDetail.data) {
-                    console.log('ssssssssi');
-                    this.insertOriginalArticle(result, sitePublication, sitemapDetail, scrapeWebsite);
-                }
-            }
-            // console.log('no import Sitemap Article')                   
-        });
+            })());
+        }
+    
+        // Attendi il completamento di tutte le promesse
+        await Promise.all(promises);
+    
+        console.log("Tutte le operazioni asincrone sono state completate.");
+        process.exit(5);
     }
 
     /**
