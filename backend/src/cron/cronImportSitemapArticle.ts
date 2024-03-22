@@ -3,7 +3,6 @@ import Vanityfair       from '../siteScrapers/api/Vanityfair';
 import IlCorriereDellaCitta       from '../siteScrapers/api/IlCorriereDellaCitta';
 import GalleriaBorghese from '../siteScrapers/api/GalleriaBorghese';
 import BluesHouse from '../siteScrapers/api/BluesHouse';
-import AraboNormannaUnesco from '../siteScrapers/api/AraboNormannaUnesco';
 import RomaToday from '../siteScrapers/api/RomaToday';
 import DinamycScraper from '../siteScrapers/api/DinamycScraper';
 
@@ -62,7 +61,7 @@ new CronJob(
 new CronJob(
 	'30 * * * *', // cronTime
 	function () {		
-        new AraboNormannaUnesco('readSitemap');      
+        new DinamycScraper('readSitemap','arabonormannaunesco.it');      
 	}, // onTick
 	null, // onComplete
 	true, // start
@@ -82,7 +81,6 @@ new CronJob(
 new CronJob(
 	'34 * * * *', // cronTime
 	function () {		
-        new AraboNormannaUnesco('readSitemap');   
 		new DinamycScraper('readSitemap', 'ilciriaco.it');       
 	}, // onTick
 	null, // onComplete
@@ -93,7 +91,6 @@ new CronJob(
 new CronJob(
 	'36 * * * *', // cronTime
 	function () {		
-        new AraboNormannaUnesco('readSitemap');   
 		new DinamycScraper('readSitemap', 'larchitetto.it');       
 	}, // onTick
 	null, // onComplete
@@ -104,7 +101,6 @@ new CronJob(
 new CronJob(
 	'38 * * * *', // cronTime
 	function () {		
-        new AraboNormannaUnesco('readSitemap');   
 		new DinamycScraper('readSitemap', 'biopianeta.it');       
 	}, // onTick
 	null, // onComplete
@@ -115,7 +111,6 @@ new CronJob(
 new CronJob(
 	'40 * * * *', // cronTime
 	function () {		
-        new AraboNormannaUnesco('readSitemap');   
 		new DinamycScraper('readSitemap', 'wineandfoodtour.it');       
 	}, // onTick
 	null, // onComplete

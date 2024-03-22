@@ -2,9 +2,6 @@ import { Command }      from 'commander';
 import Vanityfair       from '../siteScrapers/api/Vanityfair';
 import IlCorriereDellaCitta from '../siteScrapers/api/IlCorriereDellaCitta';
 import RomaToday from '../siteScrapers/api/RomaToday';
-import GalleriaBorghese from '../siteScrapers/api/GalleriaBorghese';
-import BluesHouse from '../siteScrapers/api/BluesHouse';
-import AraboNormannaUnesco from '../siteScrapers/api/AraboNormannaUnesco';
 import DinamycScraper from '../siteScrapers/api/DinamycScraper';
 
 const program = new Command();
