@@ -54,16 +54,18 @@ class BaseApi {
                     let date: Date | null = null;
                     date = new Date();
     
+                    console.log(sitemap.data);
                     if (sitemap.data != undefined) {
-                        date = new Date(sitemap.data.lastmod);
+                        date = sitemap.data.lastmod != '' ? new Date(sitemap.data.lastmod) : date;
                         loc = sitemap.data.loc;
                     }
     
                     const updateData = {
-                        lastMod: new Date(date),
+                        lastMod: date,
                         lastUrl: loc,
                         active: 1,
                     };
+                    
     
                     await Site.updateOne({ url: url }, { $set: updateData });
     
