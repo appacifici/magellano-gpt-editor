@@ -10,6 +10,8 @@ type SiteType = {
     active:             number;   
     categoryPublishSite:Number;   
     userPublishSite:    Number;  
+    selectorBody:       string;  
+    selectorImg:        string;  
 }
 
 interface ISite extends Document, Omit<SiteType, '_id'> {}
@@ -55,6 +57,14 @@ const SiteSchema   = new Schema({
     },    
     userPublishSite: { 
         type:       Number, 
+        required:   false        
+    },
+    selectorBody: { 
+        type:       String, 
+        required:   false        
+    }, 
+    selectorImg: { 
+        type:       String, 
         required:   false        
     } 
 });

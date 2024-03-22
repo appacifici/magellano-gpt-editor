@@ -15,7 +15,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'bluedizioni.it':    
                 try {
                     // await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    await openAiService.getInfoPromptAi(options.site, "65fac26a927f73f984737a0d", 0); // Usa await per attendere il completamento della promessa
+                    await openAiService.getInfoPromptAi(options.site, "65fc753ebf007d2c3322965d", 0); // Usa await per attendere il completamento della promessa
                     process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);

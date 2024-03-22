@@ -13,54 +13,61 @@ import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../..
 import { writeErrorLog } from "../../services/Log";
 
 
-class RomaToday extends BaseApi {
-    action:string;
+class DinamycScraper extends BaseApi {
+    action:     string;
+    siteName:   string;
 
-    constructor(action:string) {
+    constructor(action:string, siteName:string) {
         super();        
-        this.action = action;
+        this.action     = action;
+        this.siteName   = siteName;
         this.init();
     }
 
     async init() {
         switch (this.action) {
-            case 'readGzSitemap':                                
-            console.log('eccomi');
-                await this.readFromListSitemap('romatoday.it', this.scrapeWebsite, this.readGzSitemap);                                    
-                break;
+            case 'readSitemap':                
+                await this.readSimpleSitemap(this.siteName, this.scrapeWebsite);           
+                
+                break;                
             default:
                 // Logica per altre azioni
                 break;
         }
     }
 
-    private async scrapeWebsite(url: string): Promise<ScrapedData | null> {
+    private async scrapeWebsite(url: string, selectorBody:string, selectorImg:string): Promise<ScrapedData | null> {
         try {
-            
             // Effettua la richiesta HTTP per ottenere il contenuto della pagina
-            console.log('========>'+url);
             const response          = await axios.get(url);
-            const cheerioLoad       = cheerio.load(response.data);    
-            const bodyContainerHTML = cheerioLoad('.l-entry__body').html() || '.';    
+            const cheerioLoad       = cheerio.load(response.data);                
             const h1Content         = cheerioLoad('h1').text() || '';    
             const metaTitle         = cheerioLoad('title').text();
             const metaDescription   = cheerioLoad('meta[name="description"]').attr('content');
-            const img               = cheerioLoad('img.u-size-responsive-view').first().attr('src');
+            const bodyContainerHTML = eval(selectorBody);
+            const img               = eval(selectorImg);
     
+            if( bodyContainerHTML == '' ) {
+                console.log('Body vuoto controllare selettore');                
+            }
+            if( img == '' ) {
+                console.log('img vuoto controllare selettore');
+            }
+
             return {
                 bodyContainerHTML: bodyContainerHTML,
                 h1Content: h1Content,
                 metaTitle: metaTitle,
                 metaDescription: metaDescription,
-                img: img
+                img: img,
             };
         } catch (error:any) {
-            await writeErrorLog(`scrapeWebsite: RomaToday.it: Errore durante lo scraping della pagina`);
+            await writeErrorLog(`scrapeWebsite: galleriaborghese: Errore durante lo scraping della pagina`);
             await writeErrorLog(error);
-            console.error('scrapeWebsite: RomaToday.it: Errore durante lo scraping della pagina:', error);
+            console.error('scrapeWebsite: galleriaborghese: Errore durante lo scraping della pagina:', error);
             return null;
         }
     }
 }
 
-export default RomaToday;
+export default DinamycScraper;

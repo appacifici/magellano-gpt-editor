@@ -10,7 +10,7 @@ import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdT
 import { writeErrorLog } from "../../services/Log";
 import { download, extractGzip, readFileToServer } from "../../services/File";
 
-type ScrapeWebsiteFunction  = (url: string) => Promise<ScrapedData | null>;
+type ScrapeWebsiteFunction  = (url: string,selectorBody:string, selectorImg:string) => Promise<ScrapedData | null>;
 type ReadSitemapFunction    = (url: string) => Promise<ReadSitemapResponse|null>;
 
 
@@ -233,7 +233,7 @@ class BaseApi {
                 if (existArticle === null) {
                     const loc = urlNode.loc;
                     const lastmod = urlNode.lastmod;
-                    const scrapedData: ScrapedData | null = await scrapeWebsite(loc);
+                    const scrapedData: ScrapedData | null = await scrapeWebsite(loc, site.selectorBody, site.selectorImg);
                 
 
                     if (scrapedData
