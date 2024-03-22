@@ -42,7 +42,7 @@ class Vanityfair extends BaseApi {
             const img               = cheerioLoad('img.responsive-image__image').first().attr('src');
     
             return {
-                bodyContainerHTML: this.removeHtmlTags(bodyContainerHTML),
+                bodyContainerHTML: this.removeHtmlTags.bind(this)(bodyContainerHTML),
                 h1Content: h1Content,
                 metaTitle: metaTitle,
                 metaDescription: metaDescription,

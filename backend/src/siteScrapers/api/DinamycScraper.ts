@@ -55,7 +55,7 @@ class DinamycScraper extends BaseApi {
             }
 
             return {
-                bodyContainerHTML: this.removeHtmlTags(bodyContainerHTML),
+                bodyContainerHTML: this.removeHtmlTags.bind(this)(bodyContainerHTML),
                 h1Content: h1Content,
                 metaTitle: metaTitle,
                 metaDescription: metaDescription,
