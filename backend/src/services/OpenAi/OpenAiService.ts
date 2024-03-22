@@ -32,6 +32,7 @@ import {
 import { Console } from 'console';
 import { observableDiff } from 'deep-diff';
 import ChatGptApi from '../ChatGptApi';
+import { writeErrorLog } from '../Log';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -53,12 +54,15 @@ class OpenAiService {
             const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName, _id: promptAiId});   
             if(promptAi == null ) {  
                 console.log('getInfoPromptAi: promptAi == null');
+                await writeErrorLog(siteName + '- getInfoPromptAi: promptAi == null: siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                
                 return false;                
             }
             //Recupero la chiamata da fare definita nel db promptAi
             const call:PromptAICallInterface|null                           = this.getCurrentCall(promptAi);            
             if(call == null ) {  
                 console.log('getInfoPromptAi: call == null');
+                await writeErrorLog('getInfoPromptAi: '+siteName + '- call == null: promptAiId:'+promptAiId);
                 return false;                
             }
             
@@ -66,6 +70,7 @@ class OpenAiService {
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
             const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;
             if( sitePublication === null || article === null ) {
+                await writeErrorLog('getInfoPromptAi: sitePublication === null || article === null'+siteName + ' sitePublication?._id:'+sitePublication?._id);
                 return false;
             }            
 
@@ -100,9 +105,13 @@ class OpenAiService {
                                         await this.createDataSave(null, promptAi, call, updateCalls, siteName );                             
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } else {
+                                        await writeErrorLog('getInfoPromptAi: '+ACTION_WRITE_TOTAL_ARTICLE+': Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
+
                                         console.error('Si è verificato un errore durante l\'aggiornamento:');    
                                     }
                                 } catch (error) {
+                                    await writeErrorLog('getInfoPromptAi: '+ACTION_WRITE_TOTAL_ARTICLE+': Si è verificato un errore durante l\'aggiornamento: - siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                                    await writeErrorLog(error);
                                     console.error('Si è verificato un errore durante l\'aggiornamento:', error);
                                 }
 
@@ -113,10 +122,13 @@ class OpenAiService {
                                         await this.createDataSave(null, promptAi, call, updateCalls, siteName );                                  
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } else {
+                                        await writeErrorLog('getInfoPromptAi: '+ACTION_WRITE_TOTAL_ARTICLE+' :Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
                                         console.error('Si è verificato un errore durante l\'aggiornamento:');    
                                     }
                                 } catch (error) {
                                     console.error('Si è verificato un errore durante l\'aggiornamento:', error);
+                                    await writeErrorLog('getInfoPromptAi: '+ACTION_WRITE_TOTAL_ARTICLE+' :Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                                    await writeErrorLog(error);
                                 }
                             
                             //Salvataggio capitolo in body
@@ -141,6 +153,8 @@ class OpenAiService {
                                         console.log('Articolo generato correttamente e completato con successo.');
                                     } catch (error) {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:', error);
+                                        await writeErrorLog('getInfoPromptAi: '+ACTION_UPDATE_SCHEMA_ARTICLE+' :Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                                        await writeErrorLog(error);
                                     }
                                 }
 
@@ -152,8 +166,11 @@ class OpenAiService {
                                         console.log('Salvataggio generato correttamente e completato con successo.');
                                     } else {
                                         console.error('Si è verificato un errore durante l\'aggiornamento:');    
+                                        await writeErrorLog('getInfoPromptAi: '+ACTION_READ_WRITE_DYNAMIC_SCHEMA+' :Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
                                     }
                                 } catch (error) {
+                                    await writeErrorLog('getInfoPromptAi: '+ACTION_READ_WRITE_DYNAMIC_SCHEMA+' :Si è verificato un errore durante l\'aggiornamento - siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                                    await writeErrorLog(error);
                                     console.error('Si è verificato un errore durante l\'aggiornamento:', error);
                                 }
 
@@ -164,16 +181,20 @@ class OpenAiService {
                             }
                                                         
                         } else {
+                            await writeErrorLog('getInfoPromptAi: '+' Nessun risposta PromptAI - siteName:' + siteName+ ' promptAiId:'+promptAiId);                            
                             console.log('Nessun risposta PromptAI');
                         }                        
                     } else {
+                        await writeErrorLog('getInfoPromptAi: '+' Nessun step trovato PromptAI - siteName:' + siteName+ ' promptAiId:'+promptAiId);         
                         console.log('Nessuno step trovato PromptAI');
                     }
                 }
             } else {
+                await writeErrorLog('getInfoPromptAi: '+' Nessun PromptAI - siteName:' + siteName+ ' promptAiId:'+promptAiId);  
                 console.log('Nessun PromptAI');
             }                                      
         } catch (error:any) {         
+            await writeErrorLog('getInfoPromptAi: '+' Errore durante il recupero degli articoli - siteName:' + siteName+ ' promptAiId:'+promptAiId);  
             console.error( 'Errore durante il recupero degli articoli',error);            
             return false;
         }
@@ -226,10 +247,13 @@ class OpenAiService {
                  
                 
             } else {
+                await writeErrorLog('setArticleComplete: Nessun articolo trovato o aggiornato - article._id:' + article._id);  
                 console.error('Nessun articolo trovato o aggiornato.');
                 return false;
             }
         } catch (error) {
+            await writeErrorLog('setArticleComplete: Si è verificato un errore durante la ricerca e l\'aggiornamento dell\'articolo - article._id:' + article._id);  
+            await writeErrorLog(error);  
             console.error(`Si è verificato un errore durante la ricerca e l'aggiornamento dell'articolo: ${error}`);
             return false;
         }
@@ -425,7 +449,9 @@ class OpenAiService {
                     const update = {[field]: value}
                     await Article.findOneAndUpdate(filter, update).then(result => {
                         
-                    }).catch(error => {            
+                    }).catch(async error => {         
+                        await writeErrorLog('updateDynamicResponse: Si è verificato un errore durante update dell\'articolo - article._id:' + article._id);  
+                        await writeErrorLog(error);     
                         console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
                         return false;
                     });
@@ -508,6 +534,7 @@ class OpenAiService {
             const baseArticle:string                = call.lastBodyAppend === true && lastArticle?.bodyGpt !== undefined ? lastArticle?.bodyGpt : '';
             
             if( typeof call.saveTo !== 'string') {
+                await writeErrorLog(' updateSchemaArticle: Save string non consentuito - call.saveTo:' + call.saveTo+' article._id:'+article._id);
                 console.log("updateSchemaArticle: Save string non consentuito");
                 return false;
             }
@@ -518,7 +545,9 @@ class OpenAiService {
         const filter                                = { _id: article._id };
         return await Article.findOneAndUpdate(filter, update).then(result => {
             return true;
-        }).catch(error => {            
+        }).catch(async error => {            
+            await writeErrorLog(' updateSchemaArticle: Si è verificato un errore durante l\'update dell\'articolo: article._id:'+article._id);  
+            await writeErrorLog(error);  
             console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
             return false;
         });
@@ -606,8 +635,10 @@ class OpenAiService {
 
         return await PromptAi.findOneAndUpdate(filterPromptAi, updatePromptAi).then(result => {
             return true;
-        }).catch(error => {            
-            console.error(`Si è verificato un errore durante l'update dell'articolo: ${error}`);
+        }).catch(async error => {            
+            await writeErrorLog(' setAllCallUncomplete: Si è verificato un errore durante l\'update dell\'promptai: promptAi._id:'+promptAi._id);  
+            await writeErrorLog(error);  
+            console.error(`Si è verificato un errore durante l'update dell'promptai: ${error}`);
             return false;
         });        
     }
@@ -643,7 +674,10 @@ class OpenAiService {
             }
             return null;
         } catch (error:any) {            
-            console.error('processArticle: Errore durante l\'elaborazione dell\'articolo', error);
+            await writeErrorLog(' runChatCompletitions: errore get openai');  
+            await writeErrorLog(chatCompletionParam);  
+            await writeErrorLog(error);  
+            console.error('runChatCompletitions: Errore durante l\'elaborazione dell\'articolo', error);
             return null;
         }
     }
