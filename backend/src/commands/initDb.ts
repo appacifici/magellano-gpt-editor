@@ -128,7 +128,7 @@ const sitesToInsert:SiteArrayType = [
         active:                 1, 
         format:                 'sitemap',
         categoryPublishSite:    1,
-        userPublishSite:        19,
+        userPublishSite:        3,
         selectorBody:           'cheerioLoad(".body__container").html() || ""',
         selectorImg:            'cheerioLoad("img.responsive-image__image").first().attr("src")'
     },
@@ -139,7 +139,7 @@ const sitesToInsert:SiteArrayType = [
         active:                 1, 
         format:                 'sitemap',
         categoryPublishSite:    1,
-        userPublishSite:        19,
+        userPublishSite:        3,
         selectorBody:           'cheerioLoad(".dynamic-entry-content").html() || ""',
         selectorImg:            'cheerioLoad("img.wp-post-image").first().attr("src")'
     },
@@ -150,7 +150,7 @@ const sitesToInsert:SiteArrayType = [
         active:                 1, 
         format:                 'sitemap',
         categoryPublishSite:    1,
-        userPublishSite:        19,
+        userPublishSite:        3,
         selectorBody:           'cheerioLoad(".l-entry__body").html() || ""',
         selectorImg:            'cheerioLoad("img.u-size-responsive-view").first().attr("src")'
     },
@@ -172,7 +172,7 @@ const sitesToInsert:SiteArrayType = [
         active:                 1, 
         format:                 'sitemap',
         categoryPublishSite:    1,
-        userPublishSite:        19,
+        userPublishSite:        3,
         selectorBody:           'cheerioLoad("div.inside-article").html() || ""',
         selectorImg:            'cheerioLoad("img[class*=\'wp-image\']").first().attr("src")'
     },
