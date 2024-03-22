@@ -27,9 +27,11 @@ class DinamycScraper extends BaseApi {
     async init() {
         switch (this.action) {
             case 'readSitemap':                
-                await this.readSimpleSitemap(this.siteName, this.scrapeWebsite);           
-                
-                break;                
+                await this.readSimpleSitemap(this.siteName, this.scrapeWebsite);                           
+            break;     
+            case 'readGzSitemap':                                            
+                await this.readFromListSitemap(this.siteName, this.scrapeWebsite, this.readGzSitemap);                                    
+            break;
             default:
                 // Logica per altre azioni
                 break;

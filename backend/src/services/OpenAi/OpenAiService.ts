@@ -29,14 +29,12 @@ import {
     TypeMsgUserRaplace,
     ACTION_READ_WRITE_DYNAMIC_SCHEMA
 }                                                           from './Interface/OpenAiInterface';
-import { Console } from 'console';
-import { observableDiff } from 'deep-diff';
-import ChatGptApi from '../ChatGptApi';
-import { writeErrorLog } from '../Log';
+import { writeErrorLog }                                    from '../Log';
+import { IOpenAiService }                                   from './Interface/IOpenAiService';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-class OpenAiService {
+class OpenAiService implements IOpenAiService{
     htmlText:string;
 
     openai  = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
@@ -235,7 +233,7 @@ class OpenAiService {
     /**
      * Setta gli articoli a complete nella genrazione gpt     
      */
-    private async setArticleComplete(article:ArticleWithIdType, promptAi: PromptAiWithIdType) {
+    private async setArticleComplete(article:ArticleWithIdType, promptAi: PromptAiWithIdType): Promise<boolean>{
         try {
             const update = {genarateGpt:1};
             const filter = { _id: article._id };
@@ -244,7 +242,7 @@ class OpenAiService {
             // Se l'aggiornamento di 'Article' ha avuto successo, aggiorna 'PromptAi'
             //TODO: questa parte deve essere centralizzata perchè la deve chiamare anche il case sopra
             if (result) {
-                 
+                return true; 
                 
             } else {
                 await writeErrorLog('setArticleComplete: Nessun articolo trovato o aggiornato - article._id:' + article._id);  

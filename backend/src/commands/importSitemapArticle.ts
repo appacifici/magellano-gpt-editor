@@ -10,24 +10,18 @@ program.version('1.0.0').description('CLI team commander')
     .option('-a, --action <type>', 'Azione da lanciare')
     .action((options) => {            
         switch( options.site ) {            
-            case 'vanityfair.it':                       
-                new Vanityfair(options.action);                
-            break;
-            case 'ilcorrieredellacitta.com':                       
-                new IlCorriereDellaCitta(options.action);                
-            break;
-            case 'romatoday.it':                       
-                new RomaToday(options.action);                
-            break;
-            // case 'galleriaborghese.it':                       
-            //     new GalleriaBorghese(options.action);                
+            // case 'vanityfair.it':                       
+            //     new Vanityfair(options.action);                
             // break;
-            // case 'blueshouse.it':                       
-            //     new BluesHouse(options.action);                
+            // case 'ilcorrieredellacitta.com':                       
+            //     new IlCorriereDellaCitta(options.action);                
             // break;
-            // case 'arabonormannaunesco.it':
-            //     new AraboNormannaUnesco(options.action);                
-            // break;
+            // case 'romatoday.it':                       
+            //     new RomaToday(options.action);                
+            // break;            
+            case 'vanityfair.it':               
+            case 'ilcorrieredellacitta.com':        
+            case 'romatoday.it':  
             case 'galleriaborghese.it':
             case 'blueshouse.it':
             case 'arabonormannaunesco.it':

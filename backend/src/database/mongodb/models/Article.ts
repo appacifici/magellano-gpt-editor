@@ -18,6 +18,7 @@ type ArticleType = {
     categoryPublishSite:Number;   
     userPublishSite:    Number;   
     lastMod:            Date;   
+    publishDate:        Date;   
     [key: string]:      any;
 }
 
@@ -91,6 +92,10 @@ const ArticleSchema   = new Schema({
         max:        1 
     },
     lastMod: { 
+        type:       Date, 
+        required:   false,
+    },
+    publishDate: { 
         type:       Date, 
         required:   false,
     },

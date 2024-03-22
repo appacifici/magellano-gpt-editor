@@ -1,16 +1,12 @@
 import { CronJob }      from 'cron';
-import Vanityfair       from '../siteScrapers/api/Vanityfair';
-import IlCorriereDellaCitta       from '../siteScrapers/api/IlCorriereDellaCitta';
-import GalleriaBorghese from '../siteScrapers/api/GalleriaBorghese';
-import BluesHouse from '../siteScrapers/api/BluesHouse';
-import RomaToday from '../siteScrapers/api/RomaToday';
 import DinamycScraper from '../siteScrapers/api/DinamycScraper';
 
 new CronJob(
 	//'*/30 * * * *', //ogni 30 minuti
 	'20 * * * *', // 00:30 1:30 2:30
 	function () {		
-        new Vanityfair('readSitemap');      
+        // new Vanityfair('readSitemap');  
+		new DinamycScraper('readSitemap','vanityfair.it');    
 	}, // onTick
 	null, // onComplete
 	true, // start
@@ -20,7 +16,8 @@ new CronJob(
 new CronJob(
 	'22 * * * *', // cronTime
 	function () {		
-        new IlCorriereDellaCitta('readSitemap');      
+        // new IlCorriereDellaCitta('readSitemap');      
+		new DinamycScraper('readSitemap','ilcorrieredellacitta.com');
 	}, // onTick
 	null, // onComplete
 	true, // start
@@ -30,7 +27,8 @@ new CronJob(
 new CronJob(
 	'24 * * * *', // cronTime
 	function () {		
-        new RomaToday('readGzSitemap');      
+        // new RomaToday('readGzSitemap');      
+		new DinamycScraper('readGzSitemap','romatoday.it');
 	}, // onTick
 	null, // onComplete
 	true, // start
@@ -41,7 +39,8 @@ new CronJob(
 new CronJob(
 	'26 * * * *', // cronTime
 	function () {		
-        new GalleriaBorghese('readSitemap');      
+		new DinamycScraper('readSitemap','galleriaborghese.it');
+		    
 	}, // onTick
 	null, // onComplete
 	true, // start
@@ -51,7 +50,7 @@ new CronJob(
 new CronJob(
 	'28 * * * *', // cronTime
 	function () {		  
-        new BluesHouse('readSitemap');      
+		new DinamycScraper('readSitemap','blueshouse.it');  
 	}, // onTick
 	null, // onComplete
 	true, // start

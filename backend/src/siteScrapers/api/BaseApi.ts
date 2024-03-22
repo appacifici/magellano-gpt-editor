@@ -259,6 +259,7 @@ class BaseApi {
                             genarateGpt:            0,
                             send:                   0,
                             lastMod:                new Date(urlNode.lastmod),
+                            publishDate:            new Date(),
                             categoryPublishSite:    site.categoryPublishSite,
                             userPublishSite:        site.userPublishSite,
                         };

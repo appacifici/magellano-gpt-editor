@@ -5,5 +5,4 @@ interface WordpressCategory {
     slug: string;
 }
 
-
 export {WordpressCategory};
