@@ -147,16 +147,31 @@ class WordpressApi {
         }
     }
 
-    private async resizeAndCompressImage(inputPath:string, outputPath:string) {
+    private async  resizeAndCompressImage(inputPath:string, outputPath:string) {
         try {
           const image = await jimp.read(inputPath);
-          image.resize(1000, jimp.AUTO) // Ridimensiona l'immagine a una larghezza di 1280 pixel mantenendo l'aspect ratio
-               .quality(80) // Imposta la qualità dell'immagine al 80% per la compressione
+          const maxWidth = 1200;
+          const maxHeight = 850;
+      
+          // Calcola le proporzioni per vedere se dobbiamo ridimensionare in base alla larghezza o all'altezza
+          const widthRatio = maxWidth / image.bitmap.width;
+          const heightRatio = maxHeight / image.bitmap.height;
+          const resizeRatio = Math.min(widthRatio, heightRatio);
+            
+          console.log(image.bitmap.width, image.bitmap.height, resizeRatio )
+
+          // Se resizeRatio < 1, l'immagine è più grande delle dimensioni massime e deve essere ridimensionata
+          if (resizeRatio < 1) {     
+            console.log('eccomi');       
+            image.resize(image.bitmap.width * resizeRatio, image.bitmap.height * resizeRatio);
+          }
+      
+          image.quality(60) // Imposta la qualità dell'immagine al 80% per la compressione
                .write(outputPath, () => {
                  console.log('Image processing completed.');
                });
         } catch (error) {
-          console.error('Error processing image:', error);
+          console.error('Error processing image:');
         }
       }
     
