@@ -185,9 +185,10 @@ class WordpressApi {
             });                        
             return response.data;
         } catch (error:any) {            
-            await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:');
+            await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:'+titleGpt);
             await writeErrorLog(error);
-            throw error; // Rilancia l'errore per gestirlo in un punto superiore
+            //throw error; // Rilancia l'errore per gestirlo in un punto superiore
+            return {};
         }
     }
     
