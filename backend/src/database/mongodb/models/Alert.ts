@@ -1,17 +1,17 @@
 import mongoose, { Document, Schema, Model, ObjectId } from 'mongoose';
 
 type AlertType = {
-    processName:        string;
-    process:            string;
-    childProcess?:      string | null;
-    alert:              string;
-    debug:              string;
-    error:              string;
-    general:            string;
-    callData:           string;
-    callResponse:       string;
-    createdAt?:         Date;
-    updatedAt?:         Date;
+    processName?:        string | null;
+    process?:            string | null;
+    childProcess?:       string | null;
+    alert?:              string | null;
+    debug?:              string | null;
+    error?:              string | null;
+    general?:            string | null;
+    callData?:           string | null;
+    callResponse?:       string | null;
+    createdAt?:          Date | null;
+    updatedAt?:          Date | null;
 }
 
 interface IAlert extends Document, Omit<AlertType, '_id'> {}
@@ -22,50 +22,61 @@ type AlertArrayType       = AlertType[];
 const AlertSchema = new mongoose.Schema({
     processName: { 
         type:       String, 
-        required:   true, 
+        required:   false, 
+        default:    null,
         maxlength:  255 
     },
     process: { 
         type:       String, 
-        required:   true, 
+        required:   false, 
+        default:    null,
         maxlength:  255 
     },
     childProcess: { 
         type:       String, 
         maxlength:  255, 
-        default:    null 
+        default:    null,
+        required:   false, 
     },
     alert: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     debug: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     error: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     general: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     callData: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     callResponse: { 
         type:       String, 
-        required:   true 
+        default:    null,
+        required:   false, 
     },
     createdAt: { 
         type:       Date, 
-        default:    Date.now 
+        default:    Date.now,
+        required:   false, 
     },
     updatedAt: { 
         type:       Date, 
-        default:    Date.now 
+        default:    Date.now,
+        required:   false, 
     }
 });
 

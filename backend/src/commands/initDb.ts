@@ -6,6 +6,7 @@ import {IImage, ImageWPSchema, ImageArrayType}          from '../database/mongod
 import {IPromptAi, PromptAiArrayType, PromptAiSchema}   from '../database/mongodb/models/PromptAi';
 import { SitePublicationSchema, ISitePublication, 
     SitePublicationArrayType }                          from '../database/mongodb/models/SitePublication';
+import { AlertSchema, IAlert } from '../database/mongodb/models/Alert';
 
 connectMongoDB();
 
@@ -14,6 +15,7 @@ const Site:                 Model<ISite>                    = mongoose.model<ISi
 const Article:              Model<IArticle>                 = mongoose.model<IArticle>('Article', ArticleSchema);
 const ImageWP:              Model<IImage>                   = mongoose.model<IImage>('ImageWP', ImageWPSchema);
 const PromptAi:             Model<IPromptAi>                = mongoose.model<IPromptAi>('PromptAi', PromptAiSchema);
+const Alert:                Model<IAlert>                   = mongoose.model<IAlert>('Alert', AlertSchema);
 
 const sitePublicationToInsert:SitePublicationArrayType = [
     {   sitePublication:    'cronacalive.it', 

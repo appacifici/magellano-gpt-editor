@@ -3,6 +3,8 @@ import axios                                from "axios";
 import dotenv                               from 'dotenv';
 import * as fs                              from 'fs';
 import FormData                             from 'form-data';
+import jimp                                 from 'jimp';
+
 
 import Article, { ArticleWithIdType }       from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
@@ -144,6 +146,19 @@ class WordpressApi {
             throw error; // Rilancio l'errore per propagarlo
         }
     }
+
+    private async resizeAndCompressImage(inputPath:string, outputPath:string) {
+        try {
+          const image = await jimp.read(inputPath);
+          image.resize(1000, jimp.AUTO) // Ridimensiona l'immagine a una larghezza di 1280 pixel mantenendo l'aspect ratio
+               .quality(80) // Imposta la qualità dell'immagine al 80% per la compressione
+               .write(outputPath, () => {
+                 console.log('Image processing completed.');
+               });
+        } catch (error) {
+          console.error('Error processing image:', error);
+        }
+      }
     
 
 
@@ -156,6 +171,7 @@ class WordpressApi {
 
         const pathSave = `${process.env.PATH_DOWNALOAD}${newImg}.jpg`;
         await this.downloadImage(imagePath, pathSave);
+        await this.resizeAndCompressImage(pathSave,pathSave);
     
         const formData = new FormData();
         formData.append('file', fs.createReadStream(pathSave));
@@ -187,8 +203,8 @@ class WordpressApi {
         } catch (error:any) {            
             await writeErrorLog('uploadImageAndGetId: Errore durante il caricamento dell\'immagine:'+titleGpt);
             await writeErrorLog(error);
-            //throw error; // Rilancia l'errore per gestirlo in un punto superiore
-            return {};
+            throw error; // Rilancia l'errore per gestirlo in un punto superiore
+            
         }
     }
     
@@ -241,7 +257,8 @@ class WordpressApi {
     
             // const reponseImage: any = await this.uploadImageAndGetId(article.imageLink, sitePublication, article.titleGpt);                
 
-            const reponseImage: any = await this.uploadImageAndGetId(article.img, sitePublication, article.titleGpt);                
+            const reponseImage: any = await this.uploadImageAndGetId(article.img, sitePublication, article.titleGpt);  
+                   
             const userData = {
                 username: sitePublication.username,
                 password: sitePublication.password
@@ -281,7 +298,7 @@ class WordpressApi {
                     categories: [article?.categoryPublishSite]
                 };
     
-                console.log(postData);
+                
                 // Effettua la richiesta POST per creare il post
                 await axios.post(wordpressAPIURL, postData, {
                     headers: {
