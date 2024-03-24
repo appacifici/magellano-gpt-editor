@@ -164,9 +164,7 @@ class WordpressApi {
                 const newHeight = Math.floor(image.bitmap.height * resizeRatio);
                 image.resize(newWidth, newHeight);
             }
-
-            image.resize(1280, 900);
-
+            
             let quality = 100; // Inizia con la qualità al 60%
             let sizeOk = false;
 
