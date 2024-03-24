@@ -165,7 +165,7 @@ class WordpressApi {
             image.resize(image.bitmap.width * resizeRatio, image.bitmap.height * resizeRatio);
           }
       
-          let quality = 85; // Inizia con la qualità al 60%
+          let quality = 100; // Inizia con la qualità al 60%
           let sizeOk = false;
       
           while (!sizeOk) {
@@ -178,7 +178,7 @@ class WordpressApi {
             console.log(`Quality: ${quality}% - File Size: ${fileSizeInKb.toFixed(2)} KB`);
       
             if (fileSizeInKb > 90) {
-              quality -= 5; // Diminuisci la qualità del 5% e riprova
+              quality -= 1; // Diminuisci la qualità del 5% e riprova
               if (quality <= 0) {
                 throw new Error("Non è possibile comprimere l'immagine sotto gli 85KB mantenendo una qualità visiva accettabile.");
               }
