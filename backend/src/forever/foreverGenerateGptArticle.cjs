@@ -1,6 +1,6 @@
 const { spawn } = require('child_process');
 
-const child = spawn('npx', ['ts-node', 'src/cron/cronGenerateGptArticle.ts'], {
+const child = spawn('npx', ['tsx', 'src/cron/cronGenerateGptArticle.ts'], {
   env: { ...process.env },
   shell: true
 });
