@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import * as fs from 'fs';
 import FormData from 'form-data';
 import jimp from 'jimp';
-
+import sharp from "sharp";
 
 import Article, { ArticleWithIdType } from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType } from "../database/mongodb/models/Site";
@@ -149,43 +149,54 @@ class WordpressApi {
 
     private async resizeAndCompressImage(inputPath: string, outputPath: string) {
         try {
-            const image = await jimp.read(inputPath);
+            let quality = 100; // Inizia con la qualità al 100%
+            let sizeOk = false;
+            let fileSizeInKb = 0;
+
+            // Carica l'immagine e ottiene le sue dimensioni
+            const { width, height } = await sharp(inputPath).metadata();
+            if (width == undefined || height == undefined) {
+                return false;
+            }
+
             const maxWidth = 1280;
             const maxHeight = 900;
 
             // Calcola le proporzioni per capire se dobbiamo ridimensionare in base alla larghezza o all'altezza
-            const widthRatio = maxWidth / image.bitmap.width;
-            const heightRatio = maxHeight / image.bitmap.height;
+            const widthRatio = maxWidth / width;
+            const heightRatio = maxHeight / height;
             const resizeRatio = Math.min(widthRatio, heightRatio);
+
+            let newWidth = width;
+            let newHeight = height;
 
             // Se resizeRatio < 1, l'immagine è più grande di una delle dimensioni massime e deve essere ridimensionata
             if (resizeRatio < 1) {
-                const newWidth = Math.floor(image.bitmap.width * resizeRatio);
-                const newHeight = Math.floor(image.bitmap.height * resizeRatio);
-                image.resize(newWidth, newHeight);
+                newWidth = Math.floor(width * resizeRatio);
+                newHeight = Math.floor(height * resizeRatio);
             }
-            
-            let quality = 100; // Inizia con la qualità al 60%
-            let sizeOk = false;
 
-            while (!sizeOk) {
-                await image.quality(quality).writeAsync(outputPath);
+            while (!sizeOk && quality > 0) {
+                await sharp(inputPath)
+                    .resize(newWidth, newHeight)
+                    .jpeg({ quality: quality }) // Imposta la qualità e il formato dell'immagine
+                    .toFile(outputPath);
 
-                const stats = await fs.promises.stat(outputPath); // Usa il modulo fs per controllare la dimensione del file
-                const fileSizeInBytes = stats.size;
-                const fileSizeInKb = fileSizeInBytes / 1024;
+                const stats = await fs.promises.stat(outputPath); // Controlla la dimensione del file
+                fileSizeInKb = stats.size / 1024;
 
                 console.log(`Quality: ${quality}% - File Size: ${fileSizeInKb.toFixed(2)} KB`);
 
                 if (fileSizeInKb > 90) {
-                    quality -= 1; // Diminuisci la qualità del 5% e riprova
-                    if (quality <= 0) {
-                        throw new Error("Non è possibile comprimere l'immagine sotto gli 85KB mantenendo una qualità visiva accettabile.");
-                    }
+                    quality -= 1; // Diminuisci la qualità dell'1% e riprova
                 } else {
                     sizeOk = true;
                     console.log('Image processing completed.');
                 }
+            }
+
+            if (!sizeOk) {
+                throw new Error("Non è possibile comprimere l'immagine sotto i 90KB mantenendo una qualità visiva accettabile.");
             }
         } catch (error) {
             console.error('Error processing image:', error);
@@ -201,9 +212,10 @@ class WordpressApi {
         newImg = newImg.replace(/[^\w\s]/gi, '');
         newImg = newImg.replace(/\s+/g, '-');
 
-        const pathSave = `${process.env.PATH_DOWNALOAD}${newImg}.jpg`;
-        await this.downloadImage(imagePath, pathSave);
-        await this.resizeAndCompressImage(pathSave, pathSave);
+        const pathSaveTmp   = `${process.env.PATH_DOWNALOAD}${newImg}_temp.jpg`;
+        const pathSave      = `${process.env.PATH_DOWNALOAD}${newImg}.jpg`;
+        await this.downloadImage(imagePath, pathSaveTmp);
+        await this.resizeAndCompressImage(pathSaveTmp, pathSave);
 
         const formData = new FormData();
         formData.append('file', fs.createReadStream(pathSave));
