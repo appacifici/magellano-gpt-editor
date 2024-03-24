@@ -147,33 +147,50 @@ class WordpressApi {
         }
     }
 
-    private async  resizeAndCompressImage(inputPath:string, outputPath:string) {
+    private async resizeAndCompressImage(inputPath:string, outputPath:string) {
         try {
           const image = await jimp.read(inputPath);
-          const maxWidth = 1200;
-          const maxHeight = 850;
+          const maxWidth = 1280;
+          const maxHeight = 900;
       
           // Calcola le proporzioni per vedere se dobbiamo ridimensionare in base alla larghezza o all'altezza
           const widthRatio = maxWidth / image.bitmap.width;
           const heightRatio = maxHeight / image.bitmap.height;
           const resizeRatio = Math.min(widthRatio, heightRatio);
-            
-          console.log(image.bitmap.width, image.bitmap.height, resizeRatio )
-
+      
+          console.log(image.bitmap.width, image.bitmap.height, resizeRatio);
+      
           // Se resizeRatio < 1, l'immagine è più grande delle dimensioni massime e deve essere ridimensionata
-          if (resizeRatio < 1) {     
-            console.log('eccomi');       
+          if (resizeRatio < 1) {
             image.resize(image.bitmap.width * resizeRatio, image.bitmap.height * resizeRatio);
           }
       
-          image.quality(60) // Imposta la qualità dell'immagine al 80% per la compressione
-               .write(outputPath, () => {
-                 console.log('Image processing completed.');
-               });
+          let quality = 60; // Inizia con la qualità al 60%
+          let sizeOk = false;
+      
+          while (!sizeOk) {
+            await image.quality(quality).writeAsync(outputPath);
+      
+            const stats = await fs.promises.stat(outputPath); // Usa il modulo fs per controllare la dimensione del file
+            const fileSizeInBytes = stats.size;
+            const fileSizeInKb = fileSizeInBytes / 1024;
+      
+            console.log(`Quality: ${quality}% - File Size: ${fileSizeInKb.toFixed(2)} KB`);
+      
+            if (fileSizeInKb > 85) {
+              quality -= 5; // Diminuisci la qualità del 5% e riprova
+              if (quality <= 0) {
+                throw new Error("Non è possibile comprimere l'immagine sotto gli 85KB mantenendo una qualità visiva accettabile.");
+              }
+            } else {
+              sizeOk = true;
+              console.log('Image processing completed.');
+            }
+          }
         } catch (error) {
-          console.error('Error processing image:');
+          console.error('Error processing image:', error);
         }
-      }
+    }
     
 
 
