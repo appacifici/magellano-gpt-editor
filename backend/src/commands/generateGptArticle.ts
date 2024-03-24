@@ -25,7 +25,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'roma.cronacalive.it':   
                 try {
                     // await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    await openAiService.getInfoPromptAi(options.site, "66007615b34e648222f5f3f5", 0); // Usa await per attendere il completamento della promessa
+                    await openAiService.getInfoPromptAi(options.site, "65fdb1790b624b6378727c20", 0); // Usa await per attendere il completamento della promessa
                     process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);
@@ -35,7 +35,7 @@ program.version('1.0.0').description('CLI team commander')
             case 'bluedizioni.it':    
                 try {
                     // await chatGptApi.getArticleBySiteAndGenerate(options.site, 0); // Usa await per attendere il completamento della promessa
-                    await openAiService.getInfoPromptAi(options.site, "66007615b34e648222f5f3f6", 0); // Usa await per attendere il completamento della promessa
+                    await openAiService.getInfoPromptAi(options.site, "65fdb1790b624b6378727c21", 0); // Usa await per attendere il completamento della promessa
                     process.exit(0);
                 } catch (error) {
                     console.error('Errore durante l\'esecuzione del comando:', error);
