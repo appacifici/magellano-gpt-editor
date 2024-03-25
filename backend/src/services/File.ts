@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from 'fs';
 import { createGunzip } from 'zlib';
-import { writeErrorLog } from "./Log";
+import { writeErrorLog } from "./Log/Log";
 
 async function readFileToServer(filePath: string): Promise<string> {
     return new Promise<string>((resolve, reject) => {

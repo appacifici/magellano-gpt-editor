@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import WordpressApi from '../services/WordpressApi';
-import { writeErrorLog } from '../services/Log';
+import { writeErrorLog } from '../services/Log/Log';
 
 const program = new Command();
 program.version('1.0.0').description('CLI team commander')
