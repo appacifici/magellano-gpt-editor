@@ -10,7 +10,7 @@ import { ScrapedData }                      from "../siteScrapers/interface/Scra
 import Article, { ArticleWithIdType}        from "../database/mongodb/models/Article";
 import Site, { SiteWithIdType }             from "../database/mongodb/models/Site";
 import connectMongoDB                       from "../database/mongodb/connect";
-import { writeErrorLog }                     from "./Log";
+import { writeErrorLog }                     from "./Log/Log";
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 interface ChatCompletionRequest {

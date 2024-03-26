@@ -10,7 +10,7 @@ import { ReadSitemapSingleNodeResponse,
 import { ScrapedData }                          from "../interface/ScrapedInterface";
 import chatGptApi    from "../../services/ChatGptApi";
 import { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
-import { writeErrorLog } from "../../services/Log";
+import { writeErrorLog } from "../../services/Log/Log";
 
 
 class Vanityfair extends BaseApi {

@@ -1,21 +1,18 @@
 
-import axios from "axios";
-import dotenv from 'dotenv';
-import * as fs from 'fs';
-import FormData from 'form-data';
-import jimp from 'jimp';
-import sharp from "sharp";
+import axios                            from "axios";
+import dotenv                           from 'dotenv';
+import * as fs                          from 'fs';
+import FormData                         from 'form-data';
+import sharp                            from "sharp";
 
-import Article, { ArticleWithIdType } from "../database/mongodb/models/Article";
-import Site, { SiteWithIdType } from "../database/mongodb/models/Site";
-import connectMongoDB from "../database/mongodb/connect";
+import Article, { ArticleWithIdType }   from "../database/mongodb/models/Article";
+import Site, { SiteWithIdType }         from "../database/mongodb/models/Site";
+import connectMongoDB                   from "../database/mongodb/connect";
 import SitePublication,
-{ SitePublicationWithIdType } from "../database/mongodb/models/SitePublication";
-import ImageWP, { ImageType } from "../database/mongodb/models/ImageWP";
-import { findImageByWords } from "./MongooseFind";
-import ChatGptApi from "./ChatGptApi";
-import { writeErrorLog } from "./Log";
-import { WordpressCategory } from "./OpenAi/Interface/WordpressInterface";
+{ SitePublicationWithIdType }           from "../database/mongodb/models/SitePublication";
+import ImageWP, { ImageType }           from "../database/mongodb/models/ImageWP";
+import { writeErrorLog }                from "./Log/Log";
+import { WordpressCategory }            from "./OpenAi/Interface/WordpressInterface";
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 class WordpressApi {
@@ -202,8 +199,6 @@ class WordpressApi {
             console.error('Error processing image:', error);
         }
     }
-
-
 
     private async uploadImageAndGetId(imagePath: string, sitePublication: SitePublicationWithIdType, titleGpt: string | undefined): Promise<object> {
         const imageName = titleGpt !== undefined ? this.removeStopWords(titleGpt) : 'img_' + Math.floor(Math.random() * (1000 - 1 + 1)) + 1;

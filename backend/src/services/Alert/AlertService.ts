@@ -1,7 +1,10 @@
-import mongoose             from 'mongoose';
-import connectMongoDB       from '../../database/mongodb/connect';
-import Alert, { IAlert }    from '../../database/mongodb/models/Alert';
-import { IAlertService }    from './Interface/IAlertService';
+import mongoose                             from 'mongoose';
+import { createHash }                       from 'crypto';
+
+import connectMongoDB                       from '../../database/mongodb/connect';
+import Alert, { AlertArrayType, IAlert }    from '../../database/mongodb/models/Alert';
+import { IAlertService }                    from './Interface/IAlertService';
+import SitePublication                      from '../../database/mongodb/models/SitePublication';
 
 class AlertUtility implements IAlertService{
     private processes:  any = {};
@@ -9,7 +12,7 @@ class AlertUtility implements IAlertService{
 
     constructor() {
         this.limitWrite = 6000;
-        this.processes  = {};
+        this.processes  = {};        
     }
 
     public initProcess(sCode: string): string {
@@ -26,19 +29,19 @@ class AlertUtility implements IAlertService{
         return code;
     }
 
-    public async write(process: string, processName: string): Promise<boolean> {
+    public async write(process: string, processName: string): Promise<boolean> {        
+        mongoose.connection.on('error', err => {
+            console.error('Errore di connessione a MongoDB:', err);
+        });
+
         if (!mongoose.connection.readyState) {
             await connectMongoDB();
         }
 
-        const session = await mongoose.startSession();
-        session.startTransaction();
-
         try {            
             let totalDuration = 0;         
-
-            if (this.processes[process].error.length === 0 && totalDuration < this.limitWrite) {
-                await session.commitTransaction();
+            
+            if (this.processes[process].error.length === 0 && totalDuration < this.limitWrite) {                
                 return true;
             }
 
@@ -46,30 +49,35 @@ class AlertUtility implements IAlertService{
                 this.setAlert(process, `Superato il limite di tempo di ${this.limitWrite} ms, tempo totale esecuzione script: ${totalDuration} ms`);
             }
 
-            // Implement event saving logic here using your TimeTracker model
+            const sitesToInsert:AlertArrayType = [
+                { 
+                    processName:    processName,
+                    process:        process,
+                    debug:          this.setFormatArrayText(this.processes[process].debug),
+                    alert:          this.setFormatArrayText(this.processes[process].alert),
+                    error:          this.setFormatArrayText(this.processes[process].error),
+                    general:        this.setFormatArrayText(this.processes[process].general),
+                    callData:       this.setFormatArrayText(this.processes[process].callData),
+                    callResponse:   this.setFormatArrayText(this.processes[process].callResponse),
+                    createdAt:      new Date()
+                }
+            ];
 
-            // Save alert
-            const alert: IAlert = new Alert({
-                processName,
-                process,
-                debug:          this.setFormatArrayText(this.processes[process].debug),
-                alert:          this.setFormatArrayText(this.processes[process].alert),
-                error:          this.setFormatArrayText(this.processes[process].error),
-                general:        this.setFormatArrayText(this.processes[process].general),
-                callData:       this.setFormatArrayText(this.processes[process].callData),
-                callResponse:   this.setFormatArrayText(this.processes[process].callResponse),
-                createdAt:      new Date()
+            await Alert.insertMany(sitesToInsert)
+            .then((docs) => {
+                console.log('Sites inserted successfully:', docs);                
+            })
+            .catch((err) => {
+                console.error('Error inserting Sites:', err);                
             });
 
-            await alert.save({ session });
-
-            await session.commitTransaction();
+            
             return true;
         } catch (error) {
-            await session.abortTransaction();
+            
             throw error;
         } finally {
-            session.endSession();
+            return true;
         }
     }
 
@@ -82,14 +90,13 @@ class AlertUtility implements IAlertService{
             return results;
         }
 
-        return results.map(result => `##########\n${JSON.stringify(result, null, 2)}\n##########`).join('\n');
+        return results.map(result => `</br></br>//---------------------------------------//</br></br>${JSON.stringify(result, null, 2)}`).join('');
     }
 
     // Implement other methods as needed, adapting PHP functionality to TypeScript/Node.js
 
     private md5(input: string): string {
-        // Placeholder for MD5 implementation or import
-        return ''; // Replace with actual MD5 hash of input
+        return createHash('md5').update(input).digest('hex');
     }
 
     protected getSeparator(): string {

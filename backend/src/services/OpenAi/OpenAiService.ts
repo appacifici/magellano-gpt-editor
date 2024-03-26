@@ -27,55 +27,108 @@ import {
     ACTION_CALLS_COMPLETE,
     TYPE_READ_WRITE_DYNAMIC_SCHEMA,
     TypeMsgUserRaplace,
-    ACTION_READ_WRITE_DYNAMIC_SCHEMA
+    ACTION_READ_WRITE_DYNAMIC_SCHEMA,
+    NextArticleGenerate
 }                                                           from './Interface/OpenAiInterface';
-import { writeErrorLog }                                    from '../Log';
+import { writeErrorLog }                                    from '../Log/Log';
 import { IOpenAiService }                                   from './Interface/IOpenAiService';
+import { BaseAlert } from '../Alert/BaseAlert';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-class OpenAiService implements IOpenAiService{
+class OpenAiService extends BaseAlert implements IOpenAiService{
     htmlText:string;
 
     openai  = new OpenAI({baseURL:process.env.OPENAI_BASE_URL, apiKey:process.env.OPENAI_API_KEY});
     md      = new MarkdownIt();    
 
     constructor() {
+        super();
         this.htmlText = '';
         connectMongoDB();
     }
 
-    public async getInfoPromptAi(siteName: string, promptAiId:string, generateValue: number): Promise<boolean> {
+    public async getNextArticleGenerate(siteName: string, generateValue: number): Promise<NextArticleGenerate|null> {
+        const sitePublication: SitePublicationWithIdType | null     = await SitePublication.findOne({sitePublication: siteName});
+        const article:ArticleWithIdType | null                      = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;
+        if( sitePublication ===null || article === null ) {
+            console.log("errore getNextArticleGenerate");
+            return null;
+        }
+
+        return {
+            sitePublication: sitePublication,
+            article: article,
+        }
+    }
+
+    public async getInfoPromptAi(alertProcess:string, processName:string, siteName: string, promptAiId:string, generateValue: number): Promise<boolean> {
         try {
 
+            
+            // this.alertUtility.setError(alertProcess, 'cosa da spampare');
+            // this.alertUtility.setDebug(alertProcess, 'cosa da spampare');
+            
+
             //Recupera la logina di generazione in base al sito su cui pubblicare
+            this.alertUtility.setCallData(alertProcess, `1. PromptAi.findOne:<br> ${siteName}, _id: ${promptAiId}`);
             const promptAi: PromptAiWithIdType| null                        = await PromptAi.findOne({sitePublication: siteName, _id: promptAiId});   
             if(promptAi == null ) {  
                 console.log('getInfoPromptAi: promptAi == null');
-                await writeErrorLog(siteName + '- getInfoPromptAi: promptAi == null: siteName:' + siteName+ ' promptAiId:'+promptAiId);
-                
+                //await writeErrorLog(siteName + '- getInfoPromptAi: promptAi == null: siteName:' + siteName+ ' promptAiId:'+promptAiId);
+                this.alertUtility.setError(alertProcess, 'PromptAi.findOne:<br> promptAi == null');                
                 return false;                
             }
+            this.alertUtility.setCallResponse(alertProcess, `1. PromptAi.findOne:<br>`);
+            this.alertUtility.setCallResponse(alertProcess, promptAi);
+
+            //------------------------------------------------------------------------------------------------------------//
+
             //Recupero la chiamata da fare definita nel db promptAi
+            this.alertUtility.setCallData(alertProcess, `2. getCurrentCall:<br> ${promptAi}`);
             const call:PromptAICallInterface|null                           = this.getCurrentCall(promptAi);            
             if(call == null ) {  
-                console.log('getInfoPromptAi: call == null');
-                await writeErrorLog('getInfoPromptAi: '+siteName + '- call == null: promptAiId:'+promptAiId);
+                this.alertUtility.setError(alertProcess, '2. getCurrentCall:<br> call == null');
+                // await writeErrorLog('getCurrentCall: '+siteName + '- call == null: promptAiId:'+promptAiId);
                 return false;                
             }
-            
+            this.alertUtility.setCallResponse(alertProcess, `2. getCurrentCall:<br>`);
+            this.alertUtility.setCallResponse(alertProcess, call);
 
+            //------------------------------------------------------------------------------------------------------------//
+            
+            this.alertUtility.setCallData(alertProcess, `3. SitePublication.findOne({sitePublication: ${siteName}}) `);
             const sitePublication: SitePublicationWithIdType | null         = await SitePublication.findOne({sitePublication: siteName});
+
+            this.alertUtility.setCallData(alertProcess, `3. Article.findOne({ sitePublication: ${sitePublication?._id}, genarateGpt: ${generateValue} })`);
             const article:ArticleWithIdType | null                          = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;
             if( sitePublication === null || article === null ) {
-                await writeErrorLog('getInfoPromptAi: sitePublication === null || article === null'+siteName + ' sitePublication?._id:'+sitePublication?._id);
+                this.alertUtility.setError(alertProcess, '3. sitePublication === null || article === null');                
                 return false;
             }            
 
-            console.log(call.readTo );            
-            const text = this.getDinamycField(call,sitePublication, article);
+            this.alertUtility.setCallResponse(alertProcess, `3. Article:<br>`);
+            this.alertUtility.setCallResponse(alertProcess, article);
 
-            if(promptAi !== null && text !== null && article !== null ) {                                                
+            //------------------------------------------------------------------------------------------------------------//
+
+            let text:string|object;
+            try {
+                this.alertUtility.setCallData(alertProcess, `4. getDinamycField:<br> Call  - SitePubblication  - Article`);
+                this.alertUtility.setCallData(alertProcess, call);
+                this.alertUtility.setCallData(alertProcess, sitePublication);
+                this.alertUtility.setCallData(alertProcess, article);
+
+                text = this.getDinamycField(call,sitePublication, article);                
+            } catch( error:any ) {
+                this.alertUtility.setError(alertProcess, `4. getDinamycField:<br> ${error}` );
+                return false;
+            }
+            this.alertUtility.setCallResponse(alertProcess, `4. getDinamycField:<br> ${text}`);
+
+            //------------------------------------------------------------------------------------------------------------//
+
+            if( text !== null && article !== null ) {                                                
                 
                 if( call != null ) {                                                                
                     //Recupero i dati params per lo step corrente                    
@@ -86,8 +139,19 @@ class OpenAiService implements IOpenAiService{
                         const updateCalls:PromptAiCallsInterface                          = this.setCompleteCall(promptAi,call.key) as PromptAiCallsInterface;               
                         const jsonChatCompletation:ChatCompletionCreateParamsNonStreaming = this.appendUserMessage(step,call,promptAi,text);
                         
-                        const response: string | null = call.saveFunction !== ACTION_CALLS_COMPLETE ? await this.runChatCompletitions(jsonChatCompletation) : '';
-                        if( response !== null ) {
+                        this.alertUtility.setCallData(alertProcess, `5. runChatCompletitions:<br> `);
+                        this.alertUtility.setCallData(alertProcess, jsonChatCompletation);
+                        const response: string | unknown = call.saveFunction !== ACTION_CALLS_COMPLETE ? await this.runChatCompletitions(jsonChatCompletation) : '';
+                        if( response instanceof Error ) {
+                            this.alertUtility.setError(alertProcess, `5. runChatCompletitions:<br> ` );
+                            this.alertUtility.setError(alertProcess, response );
+                            return false;
+                        }
+
+                        if( typeof response === 'string' ) {
+                            this.alertUtility.setCallResponse(alertProcess, `5. runChatCompletitions:<br>`);
+                            this.alertUtility.setCallResponse(alertProcess, response);
+
                             //Aggiorna il campo calls e il campo data del PromptAiSchema
                             
                             //Slvataggio della struttura
@@ -655,7 +719,7 @@ class OpenAiService implements IOpenAiService{
     }
     
     //Effettua la chiamata ad OpenAi
-    public async runChatCompletitions(chatCompletionParam:ChatCompletionCreateParamsNonStreaming): Promise<string | null> {
+    public async runChatCompletitions(chatCompletionParam:ChatCompletionCreateParamsNonStreaming): Promise<string | unknown> {
         try {      
             if (chatCompletionParam) {                                                
                 console.log(chatCompletionParam);
@@ -671,12 +735,12 @@ class OpenAiService implements IOpenAiService{
                 }
             }
             return null;
-        } catch (error:any) {            
-            await writeErrorLog(' runChatCompletitions: errore get openai');  
-            await writeErrorLog(chatCompletionParam);  
-            await writeErrorLog(error);  
-            console.error('runChatCompletitions: Errore durante l\'elaborazione dell\'articolo', error);
-            return null;
+        } catch (error: unknown) {            
+            // await writeErrorLog(' runChatCompletitions: errore get openai');  
+            // await writeErrorLog(chatCompletionParam);  
+            // await writeErrorLog(error);  
+            // console.error('runChatCompletitions: Errore durante l\'elaborazione dell\'articolo', error);
+            return error;
         }
     }
 

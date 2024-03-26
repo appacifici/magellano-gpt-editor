@@ -7,7 +7,7 @@ import { ReadSitemapSingleNodeResponse, ReadSitemapResponse, UrlNode } from "../
 import { ScrapedData } from "../interface/ScrapedInterface";
 import Article, { ArticleType, ArticleWithIdType } from "../../database/mongodb/models/Article";
 import SitePublication, { SitePublicationArrayWithIdType, SitePublicationWithIdType } from "../../database/mongodb/models/SitePublication";
-import { writeErrorLog } from "../../services/Log";
+import { writeErrorLog } from "../../services/Log/Log";
 import { download, extractGzip, readFileToServer } from "../../services/File";
 
 type ScrapeWebsiteFunction  = (url: string,selectorBody:string, selectorImg:string) => Promise<ScrapedData | null>;

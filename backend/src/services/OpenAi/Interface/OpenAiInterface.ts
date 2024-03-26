@@ -1,3 +1,6 @@
+import { ArticleWithIdType } from "../../../database/mongodb/models/Article";
+import { SitePublicationWithIdType } from "../../../database/mongodb/models/SitePublication";
+
 //Da dove deve leggere i dati per creare il message user nel json call
 const TYPE_IN_JSON:string                               = 'inJson';
 const TYPE_READ_STRUCTURE_FIELD:string                  = 'readStructureField';
@@ -11,6 +14,11 @@ const ACTION_WRITE_BODY_ARTICLE:string          = 'writeBodyArticle'; //Salvatag
 const ACTION_WRITE_TOTAL_ARTICLE:string         = 'writeTotalArticle'; //Salvataggio articolo completo in 1 step
 const ACTION_CALLS_COMPLETE:string              = 'callsCompete'; //Tutte le calls eseguite
 const ACTION_READ_WRITE_DYNAMIC_SCHEMA:string   = 'readWriteDimanycSchema'; //Tutte le calls eseguite
+
+interface NextArticleGenerate {
+    sitePublication: SitePublicationWithIdType;
+    article:ArticleWithIdType | null 
+}
 
 interface ChatMessageArray {
     messages:       ChatMessage[];
@@ -76,6 +84,7 @@ type PromptAiCallsInterface = PromptAICallInterface[];
 export type {PromptAiCallsInterface,TypeMsgUserRaplace};
 export {
     PromptAICallInterface, 
+    NextArticleGenerate,
     ChatMessage,
     ChatMessageArray, 
     StructureChapter, 
