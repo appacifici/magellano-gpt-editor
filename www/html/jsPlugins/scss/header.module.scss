@@ -1,0 +1,54 @@
+@import "myvariables.module";
+
+header { 
+    .topBar {
+        height: 90px;
+        background-color: $boxBgColor;
+        text-align: center;
+        img {
+            padding-top: 5px;
+            height: 84px;
+        }
+    }
+    .searchBar {
+        background: transparent;
+        height: 20px;
+    }
+    .navtab {
+        background-color: $boxBgColor;
+        color: #fff;
+        .row {
+            img {
+                width: 25px;
+            }
+            span {
+                font-size: 12px;
+            }
+        }    
+        .navbar-toggler {
+            background-color: #fff;
+        }
+    }
+}
+
+@media (max-width: 767px) {
+    
+    header { 
+        .topBar {
+            height: 50px;
+            background-color: $boxBgColor;
+            text-align: center;
+            img {
+                height: 65px;
+                margin-top: -14px;
+                padding-top: 5px;
+            }
+        }
+    }
+}
+
+@media (max-width: 450px) {
+    .colXsAuto {
+        width: 20%!important;
+    }
+}

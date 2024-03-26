@@ -1,0 +1,111 @@
+
+
+$navbar-light-color: #fff;
+$offcanvas-color: #fff;
+$offcanvas-bg: #111215;
+$body-bg: #111215;
+$accordion-bg: transparent;
+$offcanvas-padding-y: 5px;
+$btn-close-color: #38a9ff;
+$table-color-state: #fff;
+$table-color: #fff;
+
+@import "~bootstrap/scss/mixins/banner";
+@include bsBanner("");
+
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1400px
+);
+
+// scss-docs-start import-stack
+// Configuration
+@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/variables-dark";
+@import "~bootstrap/scss/maps";
+@import "~bootstrap/scss/mixins";
+@import "~bootstrap/scss/utilities";
+
+$utilities: map-merge(
+  $utilities, (
+    "border": map-merge(
+      map-get($utilities, "border"),
+      ( responsive: true ),
+    ),
+  )
+);
+
+
+@import "~bootstrap/scss/bootstrap";
+@import "myvariables.module";
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
+body {
+    background-color: $bgColor;
+    height: 500px;
+}
+.absolute {
+    position: absolute; 
+}
+
+.mb-2 {
+    margin-bottom: 3px !important;
+}
+
+.react-datepicker-wrapper {
+    display: block!important;
+    width: 200px!important;
+    margin: 0px auto 10px !important;
+}
+
+.containerStyle {
+    background-color: $boxBgColor;
+    color: #fff;
+    font-size: 13px;
+    padding: 10px;
+}
+
+.accordion {
+  .accordion-item {
+      border: none;
+      h2 {
+          border: none;
+      }
+  }
+  .accordion-button{
+      padding: 0;
+      background: transparent;
+      color: #fff; 
+      font-size: 13px;
+      &:focus {
+          box-shadow: none;
+      }
+      &:not(.collapsed) {
+          background: transparent;
+          color: #38a9ff;
+      }   
+  }    
+  .accordion-item:first-of-type .accordion-button {
+      border-radius: 0;
+      border:none;        
+  }
+  h4 {
+      font-size: 12px;
+      margin-top: 5px;;
+  }
+  .accordion-body {
+      padding: 0;
+      width: 100%;
+      color: #fff;
+  }
+}
+
+a {
+    text-decoration: none;
+    color: #38a9ff;
+}

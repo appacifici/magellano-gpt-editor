@@ -27,6 +27,21 @@ services:
     #   MONGO_INITDB_ROOT_USERNAME: openaiuser
     #   MONGO_INITDB_ROOT_PASSWORD: h98834958fh3405870
     
+  nodegpt:
+    build: ./node/
+    container_name: node-container-gpt    
+    ports:
+      - 80:80
+      - 3000:3000
+    expose:
+      - 8080
+      - 3000
+    volumes:
+      - ./www/html/jsPlugins:/home/node/app/:cache #per sharare i file compilati da webpack a php e nginx
+    volumes_from: #volume condiviso
+      - app-data-gpt
+    env_file:
+       - variables.env
 
   nodebackendgpt:
     build: ./nodebackend/

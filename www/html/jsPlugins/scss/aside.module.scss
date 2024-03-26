@@ -1,0 +1,62 @@
+@import "myvariables.module";
+
+aside {
+    .navbarToggler {
+        position: fixed;
+        top: 9px;
+        right: 9px;
+        font-size: 15px;
+        width: 48px; 
+        background-color: #fff;
+    }    
+}
+.asideOffcanvas {     
+    // background-color: $boxColor;
+    color: #fff;
+    display: block!important;    
+    .logo {
+        margin: 0 25%;
+    }
+    .navbar-nav {
+        img {
+            width: 50px;    
+            margin-right: 2px;            
+        }
+        a {
+            text-decoration: none;
+            color: #fff;
+        }
+    }
+    a {
+            text-decoration: none;
+            color: #fff;
+        }
+    .bgNone {
+        background: transparent;
+    }
+     
+    .row {
+        h2 {
+            font-size: 16px;
+            border-left: 4px solid #38a9ff;
+            padding: 4px 7px;
+            background-color: #292c31;        
+        }
+        h3 {
+            font-size: 13px;
+            border-left: 4px solid #38a9ff;
+            padding: 1px 7px;
+            background-color: $boxBgColor;
+        }
+        img {
+            width: 22px;
+            margin-top: 1px;
+            max-height: 15px!important;
+            margin-right: 5px;
+            border: none!important;
+        }
+        span {
+            font-size: 12px;
+        }
+    }        
+}   

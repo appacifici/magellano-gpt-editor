@@ -3,3 +3,5 @@
 /backend/download
 /backend/logs
 /backend/node_modules/*
+/www/html/jsPlugins/node_modules
+/www/html/jsPlugins/node_modules/*
