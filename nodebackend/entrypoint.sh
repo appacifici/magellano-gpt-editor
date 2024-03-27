@@ -5,9 +5,9 @@ init() {
 	echo "avvio"
 	npm cache clean -f			
 	npm install
-	cd /home/node/app 
-	#NODE_ENV=development npx ts-node src/liveScoreApi/api/matches/ImportLiveMacth.ts
-	#NODE_ENV=development  npx ts-node test/testImportLiveMacth.ts
+	npm install -g nodemon
+	cd /home/node/app 	
+	NODE_ENV=development  nodemon --exec 'tsx src/commands/Server.ts'	
 }
 
 

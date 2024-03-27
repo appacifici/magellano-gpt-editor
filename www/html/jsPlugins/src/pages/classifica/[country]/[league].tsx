@@ -6,8 +6,8 @@ import Head                             from 'next/head';
 
 import * as CountryMongo                from '../../../dbService/models/Country';
 import * as StandingMongo               from '../../../dbService/models/Standing';
-import Header                           from '../../../container/Header';
-import Footer                           from '../../../container/Footer';
+import Header                           from '../../../components/Header';
+import Footer                           from '../../../components/Footer';
 import MainStanding                     from '../../../container/MainStanding';
 import MatchesBoard                     from '../../../match/components/MatchesBoard';
 import { updateMatches }                from '../../../match/slice/MatchSlice';

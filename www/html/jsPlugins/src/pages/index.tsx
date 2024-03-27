@@ -4,11 +4,11 @@ import Head                             from 'next/head';
 import { GetServerSideProps }           from 'next';
 
 
-import Header                           from '../container/Header';
-import Footer                           from '../container/Footer';
+import Header                           from '../components/Header';
+import Footer                           from '../components/Footer';
 
 import { connectMongoDB }               from '../services/globalNext';
-import Main from '../container/Main';
+import Main from '../components/Main';
 import AlertComponent from '../components/Alert';
 import Alert,{ AlertArrayWithIdType } from '../dbService/models/Alert';
 
@@ -38,20 +38,19 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     // Connettiti al database (assicurati che connectMongoDB sia implementata correttamente)
     await connectMongoDB();
 
-    let alerts: AlertArrayWithIdType = await Alert.find({}).lean();
+    let alerts: AlertArrayWithIdType = await Alert.find({}).sort({ _id: -1 }).lean();
     
     // Converti _id da ObjectId a stringa
-    alerts = alerts.map(alert => ({
+    const alertsData = alerts.map(alert => ({
         ...alert,
         _id: alert._id.toString(),
         createdAt: alert.createdAt ? formatDate(alert.createdAt.toString()) : null,
         updatedAt: alert.updatedAt ? formatDate(alert.updatedAt.toString()) : null
     }));
-
-    console.log(alerts);
+    
     return {
         props: {
-            'alerts':  alerts
+            'alerts':  alertsData
         }            
     };
 };

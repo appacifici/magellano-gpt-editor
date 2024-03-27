@@ -1,4 +1,5 @@
 import { ArticleWithIdType } from "../../../database/mongodb/models/Article";
+import { SiteArrayWithIdType, SiteWithIdType } from "../../../database/mongodb/models/Site";
 import { SitePublicationWithIdType } from "../../../database/mongodb/models/SitePublication";
 
 //Da dove deve leggere i dati per creare il message user nel json call
@@ -17,7 +18,8 @@ const ACTION_READ_WRITE_DYNAMIC_SCHEMA:string   = 'readWriteDimanycSchema'; //Tu
 
 interface NextArticleGenerate {
     sitePublication: SitePublicationWithIdType;
-    article:ArticleWithIdType | null 
+    article:ArticleWithIdType | null;
+    site:SiteWithIdType | null;
 }
 
 interface ChatMessageArray {

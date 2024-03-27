@@ -72,7 +72,7 @@ const SiteSchema   = new Schema({
 SiteSchema.index({ site: 1, url:1 }, { unique: true });
 SiteSchema.index({ active: -1 });
 
-const Site:Model<ISite> = mongoose.models.Site || mongoose.model('Site', SiteSchema);
+const Site:Model<ISite> = mongoose.models.Site || mongoose.model<ISite>('Site', SiteSchema);
 export type {ISite,SiteType, SiteWithIdType, SiteArrayWithIdType, SiteArrayType};
 export {SiteSchema};
 export default Site;

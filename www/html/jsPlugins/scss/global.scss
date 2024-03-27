@@ -109,3 +109,16 @@ a {
     text-decoration: none;
     color: #38a9ff;
 }
+
+.modal-dialog {
+    max-width: 90%;
+    margin-right: 5%;
+    margin-left: 5%;
+    h1,h2,h3 {
+        font-size: 11px;
+        margin-bottom: 1px;
+    }
+    .badge {
+        font-size: 13px;
+    }
+}

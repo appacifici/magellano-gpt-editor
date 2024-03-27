@@ -8,13 +8,13 @@ new CronJob(
 	async function () {		
         const openAiService: OpenAiService  					= new OpenAiService();
 		const nextArticleGenerate:NextArticleGenerate|null 		= await openAiService.getNextArticleGenerate('roma.cronacalive.it', 0);
-		if( nextArticleGenerate !== null && nextArticleGenerate.article !== null ) {
+		if( nextArticleGenerate !== null && nextArticleGenerate.article !== null && nextArticleGenerate.site !== null) {
 			const processName:string                			= `roma.cronacalive.it ${nextArticleGenerate.article._id}`;
 			const alertProcess:string               			= openAiService.alertUtility.initProcess(processName); //. date('YmdHis')
 			openAiService.alertUtility.setLimitWrite(60000);
 
 			await openAiService.getInfoPromptAi(alertProcess, processName, 'roma.cronacalive.it', "65fdb1790b624b6378727c20", 0);
-			openAiService.alertUtility.write(alertProcess, processName);
+			openAiService.alertUtility.write(alertProcess, processName, nextArticleGenerate.site.site, 'roma.cronacalive.it');
 		}
 	},
 	null, // onComplete

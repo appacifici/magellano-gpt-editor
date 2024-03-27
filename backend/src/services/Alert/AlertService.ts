@@ -29,7 +29,7 @@ class AlertUtility implements IAlertService{
         return code;
     }
 
-    public async write(process: string, processName: string): Promise<boolean> {        
+    public async write(process:string, processName:string, originSite:string, destinationSite:string): Promise<boolean> {        
         mongoose.connection.on('error', err => {
             console.error('Errore di connessione a MongoDB:', err);
         });
@@ -38,19 +38,22 @@ class AlertUtility implements IAlertService{
             await connectMongoDB();
         }
 
-        try {            
-            let totalDuration = 0;         
+        try {  
+            // Da riabilitare se si vogliono loggare anche le chiamate andate a buon fine ma che sono lente          
+            // let totalDuration = 0;         
             
-            if (this.processes[process].error.length === 0 && totalDuration < this.limitWrite) {                
-                return true;
-            }
+            // if (this.processes[process].error.length === 0 && totalDuration < this.limitWrite) {                
+            //     return true;
+            // }
 
-            if (totalDuration > this.limitWrite) {
-                this.setAlert(process, `Superato il limite di tempo di ${this.limitWrite} ms, tempo totale esecuzione script: ${totalDuration} ms`);
-            }
+            // if (totalDuration > this.limitWrite) {
+            //     this.setAlert(process, `Superato il limite di tempo di ${this.limitWrite} ms, tempo totale esecuzione script: ${totalDuration} ms`);
+            // }
 
             const sitesToInsert:AlertArrayType = [
                 { 
+                    originSite:     originSite,
+                    destinationSite:destinationSite,
                     processName:    processName,
                     process:        process,
                     debug:          this.setFormatArrayText(this.processes[process].debug),

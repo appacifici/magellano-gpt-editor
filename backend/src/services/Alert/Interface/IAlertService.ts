@@ -1,7 +1,7 @@
 
 interface IAlertService {
   initProcess(sCode: string): string;
-  write(process: string, processName: string): Promise<boolean>;
+  write(process: string, processName: string, originSite:string, destinationSite:string): Promise<boolean>;
   setLimitWrite(limit: number): void;
   getAlert(code: string): any[];
   setAlert(code: string, alert: any): void;

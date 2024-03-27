@@ -113,7 +113,8 @@ ArticleSchema.index({ site: 1, url:1 }, { unique: true });
 ArticleSchema.index({ send: -1 });
 ArticleSchema.index({ generate: -1, sitePublication: -1, lastMod:-1 });
 
-const Article:Model<IArticle> = mongoose.models.Article || mongoose.model('Article', ArticleSchema);
+const Article:Model<IArticle> = mongoose.models.Article || mongoose.model<IArticle>('Article', ArticleSchema);
+
 export type {IArticle,ArticleType, ArticleWithIdType, ArticleArrayWithIdType, ArticleArrayType};
 export {ArticleSchema};
 export default Article;

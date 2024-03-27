@@ -1,0 +1,61 @@
+.dataOverlayAlert {
+    font-size: 12px;
+    color: #fff;
+
+    .modalwidth80 {
+        max-width: 80vw; /* Imposta la larghezza massima al 80% della larghezza della viewport */
+        width: 80%; /* Imposta la larghezza al 80% */
+    }
+
+    .head {
+      border-bottom: 1px solid;
+      padding-bottom: 10px;
+      font-size: 16px;
+    }
+  
+    .infos {
+      margin: 0% 0% 1% 0%;
+      padding: 1% 1% 2% 1%;
+      border: 1px solid;
+      font-size: 14px;
+  
+      span {
+        float: left;
+        margin-right: 2%;
+  
+        &.orange {
+          color: #e77512;
+          margin-right: 0;
+        }
+      }
+  
+      table td {
+        width: auto !important;
+        padding: 5px !important;
+      }
+    }
+  
+    table {
+      width: 100%;
+  
+      td {
+        width: 49%;
+        border: 1px solid #ddd;
+        padding: 1%;
+  
+        .overflow {
+          max-height: 275px;
+          overflow: scroll;
+          min-height: 275px;
+        }
+  
+        pre {
+          width: 800px;
+        }
+      }
+  
+      tr:nth-child(even) {
+        background-color: #333333;
+      }
+    }
+}

@@ -33,6 +33,7 @@ import {
 import { writeErrorLog }                                    from '../Log/Log';
 import { IOpenAiService }                                   from './Interface/IOpenAiService';
 import { BaseAlert } from '../Alert/BaseAlert';
+import Site, { SiteWithIdType } from '../../database/mongodb/models/Site';
 
 const result = dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
@@ -50,8 +51,9 @@ class OpenAiService extends BaseAlert implements IOpenAiService{
 
     public async getNextArticleGenerate(siteName: string, generateValue: number): Promise<NextArticleGenerate|null> {
         const sitePublication: SitePublicationWithIdType | null     = await SitePublication.findOne({sitePublication: siteName});
-        const article:ArticleWithIdType | null                      = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;
-        if( sitePublication ===null || article === null ) {
+        const article:ArticleWithIdType | null                      = await Article.findOne({ sitePublication: sitePublication?._id, genarateGpt: generateValue }).sort({ lastMod: 1 }) as ArticleWithIdType | null;        
+        const site:SiteWithIdType | null                            = await Site.findOne({ _id: article?.site.toString()}) as SiteWithIdType | null;
+        if( sitePublication ===null || article === null || site === null ) {
             console.log("errore getNextArticleGenerate");
             return null;
         }
@@ -59,6 +61,7 @@ class OpenAiService extends BaseAlert implements IOpenAiService{
         return {
             sitePublication: sitePublication,
             article: article,
+            site: site
         }
     }
 

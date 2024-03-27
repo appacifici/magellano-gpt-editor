@@ -1,6 +1,8 @@
 import mongoose, { Document, Schema, Model, ObjectId } from 'mongoose';
 
 type AlertType = {
+    originSite?:         string | null;
+    destinationSite?:    string | null;
     processName?:        string | null;
     process?:            string | null;
     childProcess?:       string | null;
@@ -10,8 +12,8 @@ type AlertType = {
     general?:            string | null;
     callData?:           string | null;
     callResponse?:       string | null;
-    createdAt?:          Date | string | null;
-    updatedAt?:          Date | string | null;
+    createdAt?:          Date | null;
+    updatedAt?:          Date | null;
 }
 
 interface IAlert extends Document, Omit<AlertType, '_id'> {}
@@ -20,6 +22,18 @@ type AlertArrayWithIdType = AlertWithIdType[];
 type AlertArrayType       = AlertType[];
 
 const AlertSchema = new mongoose.Schema({
+    originSite: { 
+        type:       String, 
+        required:   false, 
+        default:    null,
+        maxlength:  255 
+    },
+    destinationSite: { 
+        type:       String, 
+        required:   false, 
+        default:    null,
+        maxlength:  255 
+    },
     processName: { 
         type:       String, 
         required:   false, 

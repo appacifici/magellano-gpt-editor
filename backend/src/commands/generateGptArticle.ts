@@ -16,14 +16,14 @@ program.version('1.0.0').description('CLI team commander')
                 try {                    
                     const openAiService: OpenAiService  					= new OpenAiService();
                     const nextArticleGenerate:NextArticleGenerate|null 		= await openAiService.getNextArticleGenerate('roma.cronacalive.it', 0);
-                    if( nextArticleGenerate !== null && nextArticleGenerate.article !== null ) {
+                    if( nextArticleGenerate !== null && nextArticleGenerate.article !== null && nextArticleGenerate.site !== null) {
                         const processName:string                			= `getInfoPromptAi`;
                         const processLabel:string                			= `getInfoPromptAi roma.cronacalive.it ${nextArticleGenerate.article._id}`;
                         const alertProcess:string               			= openAiService.alertUtility.initProcess(processLabel); //. date('YmdHis')
                         openAiService.alertUtility.setLimitWrite(60000);
             
-                        await openAiService.getInfoPromptAi(alertProcess, processName, 'roma.cronacalive.it', "66016ae48a18a191d0c20aa9", 0);
-                        await openAiService.alertUtility.write(alertProcess, processName);
+                        await openAiService.getInfoPromptAi(alertProcess, processName, 'roma.cronacalive.it', "66035d638d7a7093e490ed80", 0);
+                        await openAiService.alertUtility.write(alertProcess, processName, nextArticleGenerate.site.site, 'roma.cronacalive.it');
                     }
                     process.exit(0);
                 } catch (error) {
